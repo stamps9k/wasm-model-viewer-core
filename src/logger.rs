@@ -135,6 +135,6 @@ pub fn set_fps(fps: f64)
     if let Some(fps_api_fn) = set_fps_api.dyn_ref::<js_sys::Function>() {
         let _ = fps_api_fn.call1(&JsValue::NULL, &JsValue::from(fps));
     } else {
-        panic!("error_api is not a function");
+        panic!("set_fps is not a function");
     }
 }
