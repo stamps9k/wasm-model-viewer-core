@@ -4,6 +4,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 
 use crate::webgl2_frame::*;
+use crate::webgl2_frame::animations::*;
 use crate::logger::*;
 
 #[wasm_bindgen]
