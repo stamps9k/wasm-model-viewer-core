@@ -2,7 +2,7 @@ use crate::controller::*;
 
 use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::*;
-use web_sys::{window, Document, Event, EventTarget, MouseEvent };
+use web_sys::{window, EventTarget, MouseEvent };
 
 pub fn set_panic_hook() {
     // When the `console_error_panic_hook` feature is enabled, we can call the
