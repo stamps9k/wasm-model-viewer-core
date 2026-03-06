@@ -39,4 +39,10 @@ impl EngineWebGl2
 			}
 		);
 	}
+
+	pub fn update_scene(&self, resources: Map) -> Result<(), JsValue>
+	{
+		let _ = self.frame.borrow_mut().update_scene(resources);	
+		return Ok(());
+	}
 }

@@ -25,6 +25,14 @@ pub fn initialize_web_gl(resources: Map) -> Result<EngineWebGl2, JsValue>
 }
 
 #[wasm_bindgen]
+pub fn update_scene(engine: EngineWebGl2, resources: Map) -> Result<EngineWebGl2, JsValue>
+{
+	let _ = engine.update_scene(resources);
+
+	return Ok(engine);
+}
+
+#[wasm_bindgen]
 pub fn enable_rotate_x()
 {
 	let controller_values = get_control_flags();
