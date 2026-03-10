@@ -124,11 +124,19 @@ impl WebGl2Frame
 		let scene: &str = &(resources.get(&JsValue::from_str("cube")).as_string().unwrap_or(String::from("bad_value")));
 		rust_super_verbose(&("...Scene is:".to_owned() + &scene));
 
-		rust_info(&"Loading textures to memory...");
 		let mut textures: Vec<String> = Vec::new();
-		textures.push(resources.get(&JsValue::from_str("texture")).as_string().unwrap_or(String::from("bad_value")));
-		rust_info(&"...textures load to memory complete.");
 
+		//Check if texture is available and load to memory if relevant
+		if resources.get(&JsValue::from_str("texture")) != JsValue::NULL
+		{
+			rust_info(&"Loading textures to memory...");
+			textures.push(resources.get(&JsValue::from_str("texture")).as_string().unwrap_or(String::from("bad_value")));
+			rust_info(&"...textures load to memory complete.");
+		} 
+		else 
+		{
+			textures.push(String::from("bad_value"));
+		}
 
 		rust_verbose(&"Parsing scene...");
 		let objset = match wavefront_obj::obj::parse(scene)

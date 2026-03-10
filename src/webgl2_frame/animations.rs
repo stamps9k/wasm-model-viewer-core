@@ -5,7 +5,6 @@ use wasm_bindgen::prelude::*;
 use math::mean;
 
 use crate::update_camera_position;
-use crate::webgl2_frame::set_fps;
 use crate::utils::*;
 use crate::logger::*;
 use crate::controller::*;

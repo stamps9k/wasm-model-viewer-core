@@ -12,9 +12,9 @@ impl WebGl2Frame
 {
     pub(in super) fn buffer_scene(&mut self, objset: &ObjSet, textures: &Vec<String>) -> Result<(), String>
 	{
-		rust_info(&"Loading textures to memory...");
+		//rust_info(&"Loading textures to memory...");
 		rust_super_verbose(&("Texture is: ".to_owned() + &textures[0]));
-		rust_info(&"... texture loading complete.");
+		//rust_info(&"... texture loading complete.");
 
 		for n in 0..(&objset).objects.len()
 		{
@@ -59,9 +59,10 @@ impl WebGl2Frame
 		self.context.bind_vertex_array(vao.as_ref());
 		rust_verbose(&"...vertex array object creation completed.");
 
-		rust_verbose(&("Object: ".to_owned() + obj.name.as_str() + "identified as textured model. Processing accordingly"));
-		if texture_vertices.len() > 0 
+		if texture_b64 != String::from("bad_value")
 		{
+			rust_verbose(&("Object: ".to_owned() + obj.name.as_str() + "identified as textured model. Processing accordingly"));
+			
 			/*
 				Manage model texture and vertices
 			*/
@@ -114,6 +115,7 @@ impl WebGl2Frame
 					12 //offset
 				);
 
+				//This breaks on donut upload
 				self.context.enable_vertex_attrib_array(position_attribute_location);
 				self.context.enable_vertex_attrib_array(texture_attribute_location);
 				
