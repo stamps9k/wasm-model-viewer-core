@@ -219,11 +219,45 @@ impl WebGl2Frame
 	*/
 	pub fn set_projection(&self)
 	{
+		rust_info(&("Setting the projection matrix. Currently hard coded...".to_owned()));
 		let projection_matrix = Mat4::create_perspective(1.0471975511965976, 0.8260869565217391, 1.0, 2000.0);
 		let position_index = self.context.get_uniform_location(self.program.as_ref().unwrap(), "u_projection_matrix");
 		self.context.uniform_matrix4fv_with_f32_array(position_index.as_ref(), false, &projection_matrix);
+		rust_info(&("...projection matri successfully set.".to_owned()));
 
 		m4_pretty_print("Projection Matrix", &projection_matrix);
+	}
+
+	/*
+	*
+	* Get the scalling for the given scene. Done so that models always starts at a reasonable size
+	*
+	*/
+	fn get_scaling(&self) -> f32
+	{
+		let dimension_diff: [f32; 3] = 
+		[
+			self.largest[0] - self.smallest[0],
+			self.largest[1] - self.smallest[1],
+			self.largest[2] - self.smallest[2]
+		];
+		rust_info(&("Difference across each dimension is: ".to_owned() + &(dimension_diff[0].to_string()) + ", " + &(dimension_diff[1].to_string()) + ", " + &(dimension_diff[2].to_string())));
+
+		let mut largest_dimension: f32 = 0.0;
+
+		for n in dimension_diff
+		{
+			if n > largest_dimension
+			{
+				largest_dimension = n;
+			}
+		}
+		rust_info(&("Largest difference is ".to_owned() + &(largest_dimension.to_string())));
+
+		let scale: f32 = 1.0 / largest_dimension;
+		rust_info(&("Scaling factor calculated to be ".to_owned() + &(scale.to_string())));
+
+		return scale;
 	}
 }
 
