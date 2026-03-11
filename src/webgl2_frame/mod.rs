@@ -180,6 +180,8 @@ impl WebGl2Frame
 		rust_info(&"Reseting the camera_matrix...");
 		self.camera_matrix = Mat4::identity();
 		self.camera_matrix.translate(&[0.0 as f32, 0.0 as f32, -10.0 as f32]);
+		self.camera_matrix.scale(self.get_scaling());
+		m4_pretty_print_super_verbose("Camera Matrix", &self.camera_matrix);
 		rust_info(&"...camera matrix reset complete.");
 
 		return Ok(());	
@@ -228,7 +230,7 @@ impl WebGl2Frame
 		self.context.uniform_matrix4fv_with_f32_array(position_index.as_ref(), false, &projection_matrix);
 		rust_info(&("...projection matri successfully set.".to_owned()));
 
-		m4_pretty_print("Projection Matrix", &projection_matrix);
+		m4_pretty_print_super_verbose("Projection Matrix", &projection_matrix);
 	}
 
 	/*

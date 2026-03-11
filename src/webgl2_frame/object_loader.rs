@@ -202,12 +202,12 @@ impl WebGl2Frame
 	*/
 	pub(in super) fn log_vertex_indices(&mut self, vertex_indices: &Vec<u16>)
 	{
-		logger::rust_super_verbose(&("Loaded vertex indices are: "));
+		logger::rust_super_super_verbose(&("Loaded vertex indices are: "));
 		for n in 0..vertex_indices.len()
 		{
 			if n % 3 == 0
 			{
-				logger::rust_super_verbose
+				logger::rust_super_super_verbose
 				(
 					&(
 						vertex_indices[n].to_string().as_str().to_owned() + 
@@ -235,12 +235,12 @@ impl WebGl2Frame
 				" covering " + (coords.len() / 5).to_string().as_str() + " items"
 			)
 		);
-		logger::rust_super_verbose(&("Merged vertex & texture positions buffer is : "));
+		logger::rust_super_super_verbose(&("Merged vertex & texture positions buffer is : "));
 		for n in 0..coords.len()
 		{
 			if n % 5 == 0
 			{
-				logger::rust_super_verbose
+				logger::rust_super_super_verbose
 				(
 					&(
 						coords[n].to_string().as_str().to_owned() + ", " + coords[n + 1].to_string().as_str() + ", " + coords[n + 2].to_string().as_str() + 
@@ -259,7 +259,7 @@ impl WebGl2Frame
 	*/
 	pub(in super) fn log_js_uint8_array(&mut self, array: &js_sys::Uint8Array)
 	{
-		logger::rust_super_verbose(&("Loaded texure coordinates are: "));
-		logger::rust_super_verbose(&(array.to_string().as_string().unwrap()));
+		logger::rust_super_super_verbose(&("Loaded texure coordinates are: "));
+		logger::rust_super_super_verbose(&(array.to_string().as_string().unwrap()));
 	}
 }

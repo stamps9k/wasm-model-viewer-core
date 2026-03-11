@@ -82,7 +82,7 @@ pub fn update_camera_position(camera_matrix: &Mat4, controller_values: &Controll
         controller_values.zoom_in || 
         controller_values.zoom_out
     {
-        m4_pretty_print("Camera Matrix", &camera_matrix);
+        m4_pretty_print_super_super_verbose("Camera Matrix", &camera_matrix);
     }
 
     return out;
