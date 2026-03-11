@@ -13,7 +13,9 @@ pub struct WebGl2Frame
 {
 	context: WebGl2RenderingContext,
 	indices: Vec<u16>,
-	program: Option<WebGlProgram>
+	program: Option<WebGlProgram>,
+	largest: [f32; 3],
+    smallest: [f32; 3],
 } 
 
 #[wasm_bindgen]
@@ -31,7 +33,9 @@ impl WebGl2Frame
 			{ 
 				context: canvas.get_context("webgl2")?.unwrap().dyn_into::<web_sys::WebGl2RenderingContext>()?,  
 				indices: Vec::new(),
-				program: None
+				program: None,
+				largest: [0.0, 0.0, 0.0],
+    			smallest: [0.0, 0.0, 0.0],
 			};
 
 		rust_info(&"Loading shaders to memory...");

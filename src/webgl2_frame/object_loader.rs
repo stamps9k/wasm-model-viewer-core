@@ -46,6 +46,37 @@ impl WebGl2Frame
 			vertices_out.push(data.vertices[n].x as f32);
 			vertices_out.push(data.vertices[n].y as f32);
 			vertices_out.push(data.vertices[n].z as f32);
+
+			//Check and update x if required
+            if (data.vertices[n].x as f32) > self.largest[0]
+            {
+                self.largest[0] = data.vertices[n].x as f32;
+            } 
+            else if (data.vertices[n].x as f32) < self.smallest[0]
+            {
+                self.smallest[0] = data.vertices[n].x as f32;
+            }
+
+            //Check and update y if required
+            if (data.vertices[n].y as f32) > self.largest[1]
+            {
+                self.largest[1] = data.vertices[n].y as f32;
+            } 
+            else if (data.vertices[n].y as f32) < self.smallest[1]
+            {
+                self.smallest[1] = data.vertices[n].y as f32;
+            }
+
+            //Check and update z if required
+            if (data.vertices[n].z as f32) > self.largest[2]
+            {
+                self.largest[2] = data.vertices[n].z as f32;
+            } 
+            else if (data.vertices[n].z as f32) < self.smallest[2]
+            {
+                self.smallest[2] = data.vertices[n].z as f32;
+            }
+
 		}
 
 		return vertices_out;
