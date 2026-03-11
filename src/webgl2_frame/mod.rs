@@ -177,9 +177,10 @@ impl WebGl2Frame
 		
 		self.context.clear_color(0.0, 0.0, 0.0, 0.0);
 
-		rust_info(&"Initializing animation loop...");
-		//frame.initialize_animation();
-		rust_info(&"...animation loop initialisation complete.");
+		rust_info(&"Reseting the camera_matrix...");
+		self.camera_matrix = Mat4::identity();
+		self.camera_matrix.translate(&[0.0 as f32, 0.0 as f32, -10.0 as f32]);
+		rust_info(&"...camera matrix reset complete.");
 
 		return Ok(());	
 	}
