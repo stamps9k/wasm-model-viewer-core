@@ -1,6 +1,5 @@
 mod controller;
 mod utils;
-mod object_loader;
 mod logger;
 mod engine_webgl2;
 mod webgl2_frame;
@@ -78,4 +77,36 @@ pub fn disable_rotate_z()
 	let controller_values = get_control_flags();
 	let mut tmp = controller_values.lock().unwrap();
 	tmp.rotate_z = false;
+}
+
+#[wasm_bindgen]
+pub fn enable_zoom_in()
+{
+	let controller_values = get_control_flags();
+	let mut tmp = controller_values.lock().unwrap();
+	tmp.zoom_in = true;
+}
+
+#[wasm_bindgen]
+pub fn disable_zoom_in()
+{
+	let controller_values = get_control_flags();
+	let mut tmp = controller_values.lock().unwrap();
+	tmp.zoom_in = false;
+}
+
+#[wasm_bindgen]
+pub fn enable_zoom_out()
+{
+	let controller_values = get_control_flags();
+	let mut tmp = controller_values.lock().unwrap();
+	tmp.zoom_out = true;
+}
+
+#[wasm_bindgen]
+pub fn disable_zoom_out()
+{
+	let controller_values = get_control_flags();
+	let mut tmp = controller_values.lock().unwrap();
+	tmp.zoom_out = false;
 }

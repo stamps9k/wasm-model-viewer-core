@@ -14,6 +14,8 @@ pub struct ControllerValues
     pub rotate_x: bool,
     pub rotate_y: bool,
     pub rotate_z: bool,
+    pub zoom_in: bool,
+    pub zoom_out: bool,
     pub mouse_position: [f32; 2]
 }
 
@@ -26,6 +28,8 @@ impl ControllerValues
             rotate_x: false,
             rotate_y: false,
             rotate_z: false,
+            zoom_in: false,
+            zoom_out: false,
             mouse_position: [0.0, 0.0]
         }
     }
@@ -60,7 +64,23 @@ pub fn update_camera_position(camera_matrix: &Mat4, controller_values: &Controll
         out.rotate(rotation_angle, &rotation_axis);
     }
 
-    if controller_values.rotate_x || controller_values.rotate_y || controller_values.rotate_z
+    if controller_values.zoom_in
+    {
+        let movement: [f32; 3] = [0.0, 0.0, 0.05]; 
+        out.translate(&movement);
+    }
+
+    if controller_values.zoom_out
+    {
+        let movement: [f32; 3] = [0.0, 0.0, -0.05]; 
+        out.translate(&movement);
+    }
+
+    if controller_values.rotate_x || 
+        controller_values.rotate_y || 
+        controller_values.rotate_z || 
+        controller_values.zoom_in || 
+        controller_values.zoom_out
     {
         m4_pretty_print("Camera Matrix", &camera_matrix);
     }
