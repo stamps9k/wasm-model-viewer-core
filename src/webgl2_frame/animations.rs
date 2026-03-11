@@ -31,8 +31,7 @@ pub fn initialize_animation(frame_wrap: &Rc<RefCell<WebGl2Frame>>)
 	let mut time: f32 = 1.0;
 
 	//Initial Camera Matrix
-	let mut camera_matrix = Mat4::identity();
-	camera_matrix.translate(&[0.0 as f32, 0.0 as f32, -10.0 as f32]);
+	frame_animation.borrow_mut().camera_matrix.translate(&[0.0 as f32, 0.0 as f32, -10.0 as f32]);
 
 	let mut i: f32 = 0.0;
 	*g.borrow_mut() = Some(Closure::new(move || {	
@@ -63,18 +62,19 @@ pub fn initialize_animation(frame_wrap: &Rc<RefCell<WebGl2Frame>>)
 			_ => panic!("Don't know how you got here!")
 		}
 
-		camera_matrix = update_camera_position(&camera_matrix, &controller_values);
-
 		{
 			//Borrow the Rc as a mutable for use in the animation
 			let mut frame = frame_closure.borrow_mut();
+
+			//Update the camera position
+			frame.camera_matrix = update_camera_position(&frame.camera_matrix, &controller_values);
 
 			//Mutable reference to the Webgl Frame
 			let tmp = frame.program.as_mut().unwrap().clone();
 
 			//Pass worldspace transfomration to the GPU
 			let position_index = frame.context.get_uniform_location(&tmp, "u_camera_matrix");
-			frame.context.uniform_matrix4fv_with_f32_array(position_index.as_ref(), false, &camera_matrix);
+			frame.context.uniform_matrix4fv_with_f32_array(position_index.as_ref(), false, &frame.camera_matrix);
 			
 			//Pass mouse position to the GPU
 			let mouse_position = controller_values.mouse_position;

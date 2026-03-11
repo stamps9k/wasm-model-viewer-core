@@ -16,6 +16,7 @@ pub struct WebGl2Frame
 	program: Option<WebGlProgram>,
 	largest: [f32; 3],
     smallest: [f32; 3],
+	camera_matrix: Mat4
 } 
 
 #[wasm_bindgen]
@@ -36,6 +37,7 @@ impl WebGl2Frame
 				program: None,
 				largest: [0.0, 0.0, 0.0],
     			smallest: [0.0, 0.0, 0.0],
+				camera_matrix: Mat4::identity()
 			};
 
 		rust_info(&"Loading shaders to memory...");
