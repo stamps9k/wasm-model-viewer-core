@@ -225,4 +225,5 @@ impl WebGl2Frame
 
 mod shaders;
 mod models;
+mod object_loader;
 pub mod animations;

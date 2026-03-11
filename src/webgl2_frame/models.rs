@@ -4,7 +4,6 @@ use wavefront_obj::obj::Object;
 use wavefront_obj::obj::ObjSet;
 
 use crate::logger::*;
-use crate::object_loader;
 
 use super::WebGl2Frame;
 
@@ -41,14 +40,14 @@ impl WebGl2Frame
 		*	Get all relevant infomation from the wavefront object
 		*
 		*/
-		let vertex_positions: Vec<f32> = object_loader::get_vertex_positions(&obj);
+		let vertex_positions: Vec<f32> = self.get_vertex_positions(&obj);
 		rust_verbose(&("Vertices only is size: ".to_owned() + vertex_positions.len().to_string().as_str()));
-		let vertex_indices: Vec<u16> = object_loader::get_vertex_indices(&obj);
+		let vertex_indices: Vec<u16> = self.get_vertex_indices(&obj);
 		rust_verbose(&("Vertex Indices is size: ".to_owned() + vertex_indices.len().to_string().as_str()));
 
-		let texture_vertices: Vec<f32> = object_loader::get_texture_positions(&obj);
+		let texture_vertices: Vec<f32> = self.get_texture_positions(&obj);
 		rust_verbose(&("Texutre Vertices is size: ".to_owned() + texture_vertices.len().to_string().as_str()));
-		let texture_indices: Vec<u16> = object_loader::get_texture_indices(&obj);
+		let texture_indices: Vec<u16> = self.get_texture_indices(&obj);
 		rust_verbose(&("Texutre Indices is size: ".to_owned() + texture_indices.len().to_string().as_str()));
 		
 		/*
@@ -68,7 +67,7 @@ impl WebGl2Frame
 			*/
 				// First generate the texture and vertex info
 				rust_verbose("Generating a list that has all unique combined vertex + texture positions...");
-				let merged_array: Vec<f32> = object_loader::merge_vertex_and_texture_positions(&vertex_positions, &vertex_indices, &texture_vertices, &texture_indices);
+				let merged_array: Vec<f32> = self.merge_vertex_and_texture_positions(&vertex_positions, &vertex_indices, &texture_vertices, &texture_indices);
 				rust_verbose("...combined vertex + texture positions list completed.");
 
 				// create the GPU buffer
@@ -124,7 +123,7 @@ impl WebGl2Frame
 				let texture = self.context.create_texture().ok_or("failed to create texture")?;
 				self.context.active_texture(WebGl2RenderingContext::TEXTURE0);
 				self.context.bind_texture(WebGl2RenderingContext::TEXTURE_2D, Some(&texture));
-				let image = object_loader::create_image_as_uint8_array(texture_b64.as_str())?;
+				let image = self.create_image_as_uint8_array(texture_b64.as_str())?;
 				self.context.bind_texture(WebGl2RenderingContext::TEXTURE_2D, Some(&texture));
 				let _ = 
 				match 
@@ -239,7 +238,7 @@ impl WebGl2Frame
 			let vert_index = self.context.create_buffer().ok_or("failed to create buffer")?;
 			self.context.bind_buffer(WebGl2RenderingContext::ELEMENT_ARRAY_BUFFER, Some(&vert_index));
 			unsafe {	 
-				self.indices = object_loader::get_vertex_indices(&obj);
+				self.indices = self.get_vertex_indices(&obj);
 				let converted_indices = js_sys::Uint16Array::view(&self.indices);
 			
 				self.context.buffer_data_with_array_buffer_view(
