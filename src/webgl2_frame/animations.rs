@@ -30,9 +30,6 @@ pub fn initialize_animation(frame_wrap: &Rc<RefCell<WebGl2Frame>>)
 	//Initial time tracker
 	let mut time: f32 = 1.0;
 
-	//Initial Camera Matrix
-	frame_animation.borrow_mut().camera_matrix.translate(&[0.0 as f32, 0.0 as f32, -10.0 as f32]);
-
 	let mut i: f32 = 0.0;
 	*g.borrow_mut() = Some(Closure::new(move || {	
 		//Movement variables

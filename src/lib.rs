@@ -3,6 +3,7 @@ mod utils;
 mod logger;
 mod engine_webgl2;
 mod webgl2_frame;
+mod matrix_helper;
 
 use crate::controller::*;
 use crate::utils::*;

@@ -1,5 +1,6 @@
 use crate::logger::*;
 use crate::utils::*;
+use crate::matrix_helper::*;
 
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
@@ -100,9 +101,13 @@ impl WebGl2Frame
 		
 		frame.context.clear_color(0.0, 0.0, 0.0, 0.0);
 
-		rust_info(&"Initializing animation loop...");
-		//frame.initialize_animation();
-		rust_info(&"...animation loop initialisation complete.");
+		rust_info(&"Reseting the camera_matrix...");
+		let mut scale_mat: Mat4 = scaling_matrix(frame.get_scaling()); //Create the scaling matrix
+		let mut translate_matrix = Mat4::identity(); //Create the translation matrix
+		translate_matrix.translate(&[0.0 as f32, 0.0 as f32, -2.0 as f32]); //Create the translation matrix
+		frame.camera_matrix = *scale_mat.mul(&translate_matrix); //Combine with the operation S * T
+		m4_pretty_print_super_verbose("Camera Matrix", &frame.camera_matrix);
+		rust_info(&"...camera matrix reset complete.");
 
 		return Ok(frame);
 	}
@@ -178,9 +183,10 @@ impl WebGl2Frame
 		self.context.clear_color(0.0, 0.0, 0.0, 0.0);
 
 		rust_info(&"Reseting the camera_matrix...");
-		self.camera_matrix = Mat4::identity();
-		self.camera_matrix.translate(&[0.0 as f32, 0.0 as f32, -10.0 as f32]);
-		self.camera_matrix.scale(self.get_scaling());
+		let mut scale_mat: Mat4 = scaling_matrix(self.get_scaling()); //Create the scaling matrix
+		let mut translate_matrix = Mat4::identity(); //Create the translation matrix
+		translate_matrix.translate(&[0.0 as f32, 0.0 as f32, -2.0 as f32]); //Create the translation matrix
+		self.camera_matrix = *scale_mat.mul(&translate_matrix); //Combine with the operation S * T
 		m4_pretty_print_super_verbose("Camera Matrix", &self.camera_matrix);
 		rust_info(&"...camera matrix reset complete.");
 
