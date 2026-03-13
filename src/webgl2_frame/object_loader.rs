@@ -41,6 +41,10 @@ impl WebGl2Frame
 	{
 		let mut vertices_out: Vec<f32> = Vec::new();
 
+		// Reset scaling values
+		self.largest = [0.0, 0.0, 0.0];
+		self.smallest = [0.0, 0.0, 0.0];
+
 		for n in 0..data.vertices.len()
 		{
 			vertices_out.push(data.vertices[n].x as f32);
@@ -228,7 +232,7 @@ impl WebGl2Frame
 	*/
 	pub(in super) fn log_merged_vertex_and_texture_positions(&mut self, coords: &Vec<f32>)
 	{
-		logger::rust_verbose
+		logger::rust_super_super_verbose
 		(
 			&(
 				"Merged vertex & texture positions size is ".to_owned() + coords.len().to_string().as_str() +
