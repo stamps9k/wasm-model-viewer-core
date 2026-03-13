@@ -66,13 +66,13 @@ pub fn update_camera_position(camera_matrix: &Mat4, controller_values: &Controll
 
     if controller_values.zoom_in
     {
-        let movement: [f32; 3] = [0.0, 0.0, 0.05]; 
+        let movement: [f32; 3] = [0.0, 0.0, 0.1]; 
         out.translate(&movement);
     }
 
     if controller_values.zoom_out
     {
-        let movement: [f32; 3] = [0.0, 0.0, -0.05]; 
+        let movement: [f32; 3] = [0.0, 0.0, -0.1]; 
         out.translate(&movement);
     }
 
