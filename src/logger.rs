@@ -86,6 +86,47 @@ pub fn rust_error(message: &str)
     }
 }
 
+pub fn m4_pretty_print_verbose(name: &str, matrix: &[f32; 16])
+{
+	rust_verbose(&("Matrix is ".to_owned() + name + ":"));
+	rust_verbose
+	(
+		&(
+			matrix[0].to_string().as_str().to_owned() + ", " +
+			matrix[4].to_string().as_str() + ", " +
+			matrix[8].to_string().as_str() + ", " +
+			matrix[12].to_string().as_str() 
+		)
+	);
+	rust_verbose
+	(
+		&(
+			matrix[1].to_string().as_str().to_owned() + ", " +
+			matrix[5].to_string().as_str() + ", " +
+			matrix[9].to_string().as_str() + ", " +
+			matrix[13].to_string().as_str() 
+		)
+	);
+	rust_verbose
+	(
+		&(
+			matrix[2].to_string().as_str().to_owned() + ", " +
+			matrix[6].to_string().as_str() + ", " +
+			matrix[10].to_string().as_str() + ", " +
+			matrix[14].to_string().as_str() 
+		)
+	);
+	rust_verbose
+	(
+		&(
+			matrix[3].to_string().as_str().to_owned() + ", " +
+			matrix[7].to_string().as_str() + ", " +
+			matrix[11].to_string().as_str() + ", " +
+			matrix[15].to_string().as_str() 
+		)
+	);
+}
+
 pub fn m4_pretty_print_super_verbose(name: &str, matrix: &[f32; 16])
 {
 	rust_super_verbose(&("Matrix is ".to_owned() + name + ":"));
