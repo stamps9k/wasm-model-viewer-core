@@ -81,6 +81,26 @@ impl WebGl2Frame
 		frame.buffer_scene(&objset, &textures)?;
 		rust_info(&"...scene buffering complete.");
 
+		rust_super_verbose
+		(
+			&(
+				"largest dimensions for model are ".to_owned() + 
+				&frame.largest[0].to_string() + ", " +
+				&frame.largest[1].to_string() + ", " +
+				&frame.largest[2].to_string() + ", "
+			)
+		);
+
+		rust_super_verbose
+		(
+			&(
+				"smallest dimensions for model are ".to_owned() + 
+				&frame.smallest[0].to_string() + ", " +
+				&frame.smallest[1].to_string() + ", " +
+				&frame.smallest[2].to_string() + ", "
+			)
+		);
+
 		//Pass context resolution for use in shader
 		let resolution = get_window_resolution();
 		rust_super_verbose
@@ -102,10 +122,13 @@ impl WebGl2Frame
 		frame.context.clear_color(0.0, 0.0, 0.0, 0.0);
 
 		rust_info(&"Reseting the camera_matrix...");
+		let mut central_matrix = Mat4::identity(); //Create the translation matrix to centralise object ontop of camera
+		central_matrix.translate(&frame.get_centralisation()); //Create the translation matrix to centralise object ontop of camera
 		let mut scale_mat: Mat4 = scaling_matrix(frame.get_scaling()); //Create the scaling matrix
-		let mut translate_matrix = Mat4::identity(); //Create the translation matrix
-		translate_matrix.translate(&[0.0 as f32, 0.0 as f32, -2.0 as f32]); //Create the translation matrix
-		frame.camera_matrix = *scale_mat.mul(&translate_matrix); //Combine with the operation S * T
+		central_matrix.mul(&scale_mat); //Combine so that scaled model moves the right amount to sit on camera
+		let mut translate_matrix = Mat4::identity(); //Create the translation matrix to pull the starting camera out of model
+		translate_matrix.translate(&[0.0 as f32, 0.0 as f32, -5.0 as f32]); //Create the translation matrix to pull camera out of model
+		frame.camera_matrix = *central_matrix.mul(&translate_matrix); //Combine with the operation S * T
 		m4_pretty_print_super_verbose("Camera Matrix", &frame.camera_matrix);
 		rust_info(&"...camera matrix reset complete.");
 
@@ -162,6 +185,26 @@ impl WebGl2Frame
 		self.buffer_scene(&objset, &textures)?;
 		rust_info(&"...scene buffering complete.");
 
+		rust_verbose
+		(
+			&(
+				"largest dimensions for model are ".to_owned() + 
+				&self.largest[0].to_string() + ", " +
+				&self.largest[1].to_string() + ", " +
+				&self.largest[2].to_string() + ", "
+			)
+		);
+
+		rust_verbose
+		(
+			&(
+				"smallest dimensions for model are ".to_owned() + 
+				&self.smallest[0].to_string() + ", " +
+				&self.smallest[1].to_string() + ", " +
+				&self.smallest[2].to_string() + ", "
+			)
+		);
+
 		//Pass context resolution for use in shader
 		let resolution = get_window_resolution();
 		rust_super_verbose
@@ -183,11 +226,14 @@ impl WebGl2Frame
 		self.context.clear_color(0.0, 0.0, 0.0, 0.0);
 
 		rust_info(&"Reseting the camera_matrix...");
+		let mut central_matrix = Mat4::identity(); //Create the translation matrix to centralise object ontop of camera
+		central_matrix.translate(&self.get_centralisation()); //Create the translation matrix to centralise object ontop of camera
 		let mut scale_mat: Mat4 = scaling_matrix(self.get_scaling()); //Create the scaling matrix
-		let mut translate_matrix = Mat4::identity(); //Create the translation matrix
-		translate_matrix.translate(&[0.0 as f32, 0.0 as f32, -2.0 as f32]); //Create the translation matrix
-		self.camera_matrix = *scale_mat.mul(&translate_matrix); //Combine with the operation S * T
-		m4_pretty_print_super_verbose("Camera Matrix", &self.camera_matrix);
+		central_matrix.mul(&scale_mat); //Combine so that scaled model moves the right amount to sit on camera
+		let mut translate_matrix = Mat4::identity(); //Create the translation matrix to pull the starting camera out of model
+		translate_matrix.translate(&[0.0 as f32, 0.0 as f32, -5.0 as f32]); //Create the translation matrix to pull camera out of model
+		self.camera_matrix = *central_matrix.mul(&translate_matrix); //Combine with the operation S * T
+		m4_pretty_print_verbose("Camera Matrix", &self.camera_matrix);
 		rust_info(&"...camera matrix reset complete.");
 
 		return Ok(());	
@@ -269,6 +315,15 @@ impl WebGl2Frame
 		rust_info(&("Scaling factor calculated to be ".to_owned() + &(scale.to_string())));
 
 		return scale;
+	}
+
+	fn get_centralisation(&self) -> [f32; 3]
+	{
+		let middle_x: f32 = (self.largest[0] + self.smallest[0]) / 2.0;
+		let middle_y: f32 = (self.largest[1] + self.smallest[1]) / 2.0;
+		let middle_z: f32 = ((self.largest[2] + self.smallest[2]) / 2.0);
+
+		return [-middle_x, -middle_y, -middle_z];
 	}
 }
 
