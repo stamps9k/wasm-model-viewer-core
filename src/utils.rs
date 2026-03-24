@@ -3,6 +3,9 @@ use crate::controller::*;
 use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::*;
 use web_sys::{window, EventTarget, MouseEvent };
+use js_sys::Array;
+use js_sys::Map;
+use std::collections::HashMap;
 
 pub fn set_panic_hook() {
     // When the `console_error_panic_hook` feature is enabled, we can call the
@@ -85,4 +88,28 @@ pub fn get_window_resolution() -> [f32; 2]
         .as_f64().unwrap() as f32;
 
     [width, height]
+}
+
+pub fn get_js_sys_map_to_hashmap(outer_map: &Map, inner_map_key: &str) -> Option<HashMap<String, String>>
+{
+    let inner_map_jsvalue = outer_map.get(&JsValue::from_str(inner_map_key));
+    let inner_map = Map::from(inner_map_jsvalue);
+    let result: HashMap<String, String> = Array::from(&inner_map.entries())
+        .iter()
+        .filter_map(|entry| {
+            let pair = Array::from(&entry);
+            let key = pair.get(0).as_string()?;
+            let value = pair.get(1).as_string()?;
+            Some((key, value))
+        })
+        .collect();
+
+    if result.is_empty()
+    {
+        return None
+    }
+    else
+    {
+        return Some(result);
+    }
 }

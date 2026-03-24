@@ -1,6 +1,6 @@
 use std::rc::Rc;
 use std::cell::RefCell;
-use webgl_matrix::*;
+//use webgl_matrix::*;
 use wasm_bindgen::prelude::*;
 use math::mean;
 
@@ -92,13 +92,11 @@ pub fn initialize_animation(frame_wrap: &Rc<RefCell<WebGl2Frame>>)
 			let time_index = frame.context.get_uniform_location(&tmp, "u_time");
 			frame.context.uniform1f(time_index.as_ref(), time);
 
-			frame.draw(&frame.context, &frame.indices);
+			frame.draw();
 
-		
-
-		// Set the body's text content to how many times this
-		// requestAnimationFrame callback has fired.
-		i += 1.0;
+			// Set the body's text content to how many times this
+			// requestAnimationFrame callback has fired.
+			i += 1.0;
 
 			// Schedule ourself for another requestAnimationFrame callback.
 			frame.request_animation_frame(f.borrow().as_ref().unwrap());

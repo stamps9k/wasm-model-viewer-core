@@ -4,10 +4,31 @@ use js_sys::*;
 use std::io::Cursor;
 use image::ImageReader;
 
-use super::WebGl2Frame;
+use super::WebGl2WavefrontObject;
 
-impl WebGl2Frame
+impl WebGl2WavefrontObject
 {
+	pub(in super) fn get_material_name(&mut self) -> String
+	{
+		return self.obj.geometry[0].material_name.clone().unwrap();
+	}
+
+	pub(in super) fn get_texture_name(&mut self) -> Option<String>
+	{
+		let mtl_name = self.get_material_name();
+
+		// loop through materials until you find the one
+		for material in self.mtls.clone().unwrap().materials
+		{
+			if material.name == mtl_name
+			{
+				return material.diffuse_map;
+			} 
+		}
+
+		return None;
+	}	
+
 	/*
 	*
 	*	Fetch the vertex index data as stored in the model. 
@@ -15,13 +36,13 @@ impl WebGl2Frame
 	*	Note 2 - fetched in the order y, z, x as for some reason the parser library stores the data in a different order to the model
 	*
 	*/
-	pub(in super) fn get_vertex_indices(&mut self, data: &wavefront_obj::obj::Object) -> Vec<u16> 
+	pub(in super) fn get_vertex_indices(&mut self) -> Vec<u16> 
 	{
 		let mut shapes_out: Vec<u16> = Vec::new();
 
-		for n in 0..data.geometry[0].shapes.len()
+		for n in 0..self.obj.geometry[0].shapes.len()
 		{
-			let Primitive::Triangle(x, y, z) = data.geometry[0].shapes[n].primitive else { break };
+			let Primitive::Triangle(x, y, z) = self.obj.geometry[0].shapes[n].primitive else { break };
 			shapes_out.push(y.0 as u16);
 			shapes_out.push(z.0 as u16);
 			shapes_out.push(x.0 as u16);
@@ -37,7 +58,7 @@ impl WebGl2Frame
 	*	Fetch the vertex position data as stored in the model. 
 	*
 	*/
-	pub(in super) fn get_vertex_positions(&mut self, data: &wavefront_obj::obj::Object) -> Vec<f32> 
+	pub(in super) fn get_vertex_positions(&mut self) -> Vec<f32> 
 	{
 		let mut vertices_out: Vec<f32> = Vec::new();
 
@@ -45,43 +66,61 @@ impl WebGl2Frame
 		self.largest = [0.0, 0.0, 0.0];
 		self.smallest = [0.0, 0.0, 0.0];
 
-		for n in 0..data.vertices.len()
+		for n in 0..self.obj.vertices.len()
 		{
-			vertices_out.push(data.vertices[n].x as f32);
-			vertices_out.push(data.vertices[n].y as f32);
-			vertices_out.push(data.vertices[n].z as f32);
+			vertices_out.push(self.obj.vertices[n].x as f32);
+			vertices_out.push(self.obj.vertices[n].y as f32);
+			vertices_out.push(self.obj.vertices[n].z as f32);
 
 			//Check and update x if required
-            if (data.vertices[n].x as f32) > self.largest[0]
+            if (self.obj.vertices[n].x as f32) > self.largest[0]
             {
-                self.largest[0] = data.vertices[n].x as f32;
+                self.largest[0] = self.obj.vertices[n].x as f32;
             } 
-            else if (data.vertices[n].x as f32) < self.smallest[0]
+            else if (self.obj.vertices[n].x as f32) < self.smallest[0]
             {
-                self.smallest[0] = data.vertices[n].x as f32;
+                self.smallest[0] = self.obj.vertices[n].x as f32;
             }
 
             //Check and update y if required
-            if (data.vertices[n].y as f32) > self.largest[1]
+            if (self.obj.vertices[n].y as f32) > self.largest[1]
             {
-                self.largest[1] = data.vertices[n].y as f32;
+                self.largest[1] = self.obj.vertices[n].y as f32;
             } 
-            else if (data.vertices[n].y as f32) < self.smallest[1]
+            else if (self.obj.vertices[n].y as f32) < self.smallest[1]
             {
-                self.smallest[1] = data.vertices[n].y as f32;
+                self.smallest[1] = self.obj.vertices[n].y as f32;
             }
 
             //Check and update z if required
-            if (data.vertices[n].z as f32) > self.largest[2]
+            if (self.obj.vertices[n].z as f32) > self.largest[2]
             {
-                self.largest[2] = data.vertices[n].z as f32;
+                self.largest[2] = self.obj.vertices[n].z as f32;
             } 
-            else if (data.vertices[n].z as f32) < self.smallest[2]
+            else if (self.obj.vertices[n].z as f32) < self.smallest[2]
             {
-                self.smallest[2] = data.vertices[n].z as f32;
+                self.smallest[2] = self.obj.vertices[n].z as f32;
             }
 
 		}
+
+		logger::rust_warn
+		(
+			&("Quick check 1 - largest[".to_owned() +
+			&self.largest[0].to_string() + ", " +
+			&self.largest[1].to_string() + ", " +
+			&self.largest[2].to_string() + ", " +
+			"]")
+		);
+
+		logger::rust_warn
+		(
+			&("Quick check 1 - smallest[".to_owned() +
+			&self.smallest[0].to_string() + ", " +
+			&self.smallest[1].to_string() + ", " +
+			&self.smallest[2].to_string() + ", " +
+			"]")
+		);
 
 		return vertices_out;
 	}
@@ -91,14 +130,14 @@ impl WebGl2Frame
 	* Fetch the texture position data as stored in the model. 
 	*
 	*/
-	pub(in super) fn get_texture_positions(&mut self, data: &wavefront_obj::obj::Object) -> Vec<f32> 
+	pub(in super) fn get_texture_positions(&mut self) -> Vec<f32> 
 	{
 		let mut vertices_out: Vec<f32> = Vec::new();
 
-		for n in 0..data.tex_vertices.len()
+		for n in 0..self.obj.tex_vertices.len()
 		{
-			vertices_out.push(data.tex_vertices[n].u as f32);
-			vertices_out.push(data.tex_vertices[n].v as f32);
+			vertices_out.push(self.obj.tex_vertices[n].u as f32);
+			vertices_out.push(self.obj.tex_vertices[n].v as f32);
 			//vertices_out.push(data.tex_vertices[n].w as f32);
 		}
 		return vertices_out;
@@ -110,13 +149,13 @@ impl WebGl2Frame
 	*	Note 1 - fetched in the order y, z, x as for some reason the parser library stores the data in a different order to the model
 	*
 	*/
-	pub(in super) fn get_texture_indices(&mut self, data: &wavefront_obj::obj::Object) -> Vec<u16>
+	pub(in super) fn get_texture_indices(&mut self) -> Vec<u16>
 	{
 		let mut shapes_out: Vec<u16> = Vec::new();
 
-		for n in 0..data.geometry[0].shapes.len()
+		for n in 0..self.obj.geometry[0].shapes.len()
 		{
-			let Primitive::Triangle(x, y, z) = data.geometry[0].shapes[n].primitive else { break };
+			let Primitive::Triangle(x, y, z) = self.obj.geometry[0].shapes[n].primitive else { break };
 			match y.1 
 			{
 				Some(y) => shapes_out.push(y as u16),
@@ -165,10 +204,13 @@ impl WebGl2Frame
 	*	Convert the passed base64 image data into a raw u8 array of rbga values. 
 	*
 	*/
-	pub(in super) fn create_image_as_uint8_array(&mut self, base64_png: &str) -> Result<Uint8Array, String> 
+	pub(in super) fn create_image_as_uint8_array(&mut self) -> Result<Uint8Array, String> 
 	{
+		//For now assuming that there is only ever 1 texture per object
+		let texture_b64 = self.textures.clone().unwrap().into_values().next().expect("Expected at least one texture");
+
 		// Convert base64 to a binary array
-		let bytes = base64::decode(base64_png).map_err(|_| "Failed to decode base64")?;
+		let bytes = base64::decode(texture_b64.clone()).map_err(|_| "Failed to decode base64")?;
 
 		let img1 = match ImageReader::new(Cursor::new(bytes)).with_guessed_format()
 		{
@@ -186,7 +228,9 @@ impl WebGl2Frame
 
 		// Get image dimensions
 		let (width, height) = rgba_img.dimensions();
-		web_sys::console::log_1(&("Image Size: ".to_owned() + width.to_string().as_str() + " x " + height.to_string().as_str()).into());
+		self.texture_height = height as i32;
+		self.texture_width = width as i32;
+		logger::rust_info(&("Image Size: ".to_owned() + width.to_string().as_str() + " x " + height.to_string().as_str()));
 
 		// Access raw pixel data
 		let pixels = rgba_img.as_raw();
