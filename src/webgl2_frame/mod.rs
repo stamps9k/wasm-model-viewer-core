@@ -303,7 +303,7 @@ impl WebGl2Frame
 
 		for n in 0..self.objects.len()
 		{
-			rust_super_super_verbose("Initiating draw call...");
+			rust_super_super_verbose(&format!("Initiating draw call for object {}...", n));
 			rust_super_verbose(&("drawing ".to_owned() + self.objects[n].indices_size.to_string().as_str() + " indices"));
 
 			// If the object is untextured, just grab the position attribute for feeding from the model 

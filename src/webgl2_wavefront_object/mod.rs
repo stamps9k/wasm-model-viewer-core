@@ -220,16 +220,12 @@ impl WebGl2WavefrontObject
 				//Currently junk colors. Only care about matching vertex count in sample cube
 				let mut rng = rand::rng();
 				let mut colors: Vec<f32> = Vec::new();
-				for n in 0..vertex_indices.len()
+				for _ in 0..self.obj.vertices.len()
 				{
-					if n % 3 == 0
-					{
-						colors.push(rng.random_range(0.0..=1.0));
-						colors.push(rng.random_range(0.0..=1.0));
-						colors.push(rng.random_range(0.0..=1.0));
-						colors.push(1.0)
-					}
-
+					colors.push(rng.random_range(0.0..=1.0));
+					colors.push(rng.random_range(0.0..=1.0));
+					colors.push(rng.random_range(0.0..=1.0));
+					colors.push(1.0);
 				}
 				let color_array = js_sys::Float32Array::view(&colors);
 				context.buffer_data_with_array_buffer_view
