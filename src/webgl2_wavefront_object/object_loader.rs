@@ -42,10 +42,22 @@ impl WebGl2WavefrontObject
 
 		for n in 0..self.obj.geometry[0].shapes.len()
 		{
-			let Primitive::Triangle(x, y, z) = self.obj.geometry[0].shapes[n].primitive else { break };
-			shapes_out.push(y.0 as u16);
-			shapes_out.push(z.0 as u16);
-			shapes_out.push(x.0 as u16);
+			let Primitive::Triangle(x, y, z) = self.obj.geometry[0].shapes[n].primitive else { continue };
+			match y.1 
+			{
+				Some(y) => shapes_out.push(y as u16),
+				None => { continue; }
+			};
+			match z.1 
+			{
+				Some(z) => shapes_out.push(z as u16),
+				None => continue
+			};
+			match x.1 
+			{
+				Some(x) => shapes_out.push(x as u16),
+				None => continue
+			};
 		}
 
 		self.log_vertex_indices(&shapes_out);	
