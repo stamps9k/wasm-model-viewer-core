@@ -11,6 +11,7 @@ use crate::logger::*;
 
 pub struct WebGl2WavefrontObject
 {
+	pub marked_for_deletion: bool,
 	obj: wavefront_obj::obj::Object,
 	mtls: Option<wavefront_obj::mtl::MtlSet>,
 	pub vertex_buffer: Option<WebGlBuffer>,
@@ -30,7 +31,8 @@ impl WebGl2WavefrontObject
     pub fn new(obj: wavefront_obj::obj::Object, mtls: Option<wavefront_obj::mtl::MtlSet>, textures: Option<HashMap<String, String>>) -> Result<Self, String>
     {
         let object = Self {
-            obj: obj,
+			marked_for_deletion: false,
+			obj: obj,
 			mtls: mtls,
 			vertex_buffer: None,
 			vertex_and_texture_buffer: None,
@@ -63,14 +65,6 @@ impl WebGl2WavefrontObject
 		rust_verbose(&("Texutre Vertices is size: ".to_owned() + texture_vertices.len().to_string().as_str()));
 		let texture_indices: Vec<u16> = self.get_texture_indices();
 		rust_verbose(&("Texutre Indices is size: ".to_owned() + texture_indices.len().to_string().as_str()));
-		
-		/*
-			Create the vertex array object	
-		*/
-		rust_verbose(&"Creating vertex array object...");
-		let vao = context.create_vertex_array();
-		context.bind_vertex_array(vao.as_ref());
-		rust_verbose(&"...vertex array object creation completed.");
 
 		if self.textures != None
 		{
@@ -230,10 +224,10 @@ impl WebGl2WavefrontObject
 				{
 					if n % 3 == 0
 					{
-						let c: f32 = rng.random_range(0.0..=1.0);
-						colors.push(c);
-						colors.push(c);
-						colors.push(c);
+						colors.push(rng.random_range(0.0..=1.0));
+						colors.push(rng.random_range(0.0..=1.0));
+						colors.push(rng.random_range(0.0..=1.0));
+						colors.push(1.0)
 					}
 
 				}
@@ -268,6 +262,16 @@ impl WebGl2WavefrontObject
 
 		}
 		return Ok(());
+	}
+
+	pub fn cleanup(&mut self, context: &WebGl2RenderingContext)
+	{
+		context.disable_vertex_attrib_array(0); // a_position
+    	context.disable_vertex_attrib_array(1);
+		context.delete_buffer(self.vertex_buffer.as_ref());
+		context.delete_buffer(self.vertex_and_texture_buffer.as_ref());
+		context.delete_buffer(self.vertex_index_buffer.as_ref());
+		context.delete_buffer(self.color_buffer.as_ref());
 	}
 }
 

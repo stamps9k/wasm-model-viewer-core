@@ -157,6 +157,12 @@ impl WebGl2Frame
 
 	pub fn update_scene(&mut self, resources: Map) -> Result<(), JsValue>
 	{
+		//Cleaning up old scene
+		for mut object in &mut self.objects
+		{
+			object.marked_for_deletion = true;
+		}
+
 		rust_info(&"Loading shaders to memory...");
 		let vert_shader: &str = &(resources.get(&JsValue::from_str("vert_shader")).as_string().unwrap_or(String::from("bad_value")));
 		rust_super_verbose(&("Vertex Shader is: ".to_owned() + &vert_shader));
@@ -177,6 +183,7 @@ impl WebGl2Frame
 		rust_info(&"Loading scene to memory...");
 		let scene: &str = &(resources.get(&JsValue::from_str("cube")).as_string().unwrap_or(String::from("bad_value")));
 		rust_super_verbose(&("...Scene is:".to_owned() + &scene));
+		rust_info(&"...scene loading to memory complete.");
 
 		rust_info(&"Loading materials to memory...");
 		let materials: Option<HashMap<String, String>> = get_js_sys_map_to_hashmap(&resources, "materials");
@@ -195,14 +202,20 @@ impl WebGl2Frame
 		};
 		rust_verbose(&"...scene parsing complete.");
 
-		rust_verbose(&"Parsing materials...");
-		let material_text = materials.unwrap().into_values().next().expect("bad_value");
-		let mtls = match wavefront_obj::mtl::parse(material_text)
+		//If required parse the materials
+		let mtls: Option<wavefront_obj::mtl::MtlSet> = None;
+		if !materials.is_none()
 		{
-			Ok(mtls) => Some(mtls),
-			Err(e) => panic!("{}", e)
-		};
-		rust_verbose(&"...Materials parsing complete.");
+			rust_verbose(&"Parsing materials...");
+			let material_text = materials.unwrap().into_values().next().expect("bad_value");
+			let mtls = match wavefront_obj::mtl::parse(material_text)
+			{
+				Ok(mtls) => mtls,
+				Err(e) => panic!("{}", e)
+			};
+			rust_verbose(&"...Materials parsing complete.");
+		}
+
 		rust_info(&"...scene loading complete.");
 
 		rust_info(&"Buffering scene to GPU...");
@@ -271,8 +284,20 @@ impl WebGl2Frame
 		return Ok(());
 	}
 
-	fn draw(&self) 
+	fn draw(&mut self) 
 	{
+		// First pass - clean up any objects marked for deletion
+		let context = &self.context;
+		self.objects.retain_mut(|object| {
+			if object.marked_for_deletion {
+				rust_warn("Cleanup check");
+				object.cleanup(context);
+				false
+			} else {
+				true
+			}
+		});
+
 		// Clear the color & depth buffers before drawing
 		self.context.clear(WebGl2RenderingContext::COLOR_BUFFER_BIT | WebGl2RenderingContext::DEPTH_BUFFER_BIT);
 
@@ -284,7 +309,6 @@ impl WebGl2Frame
 			// If the object is untextured, just grab the position attribute for feeding from the model 
 			if !self.objects[n].vertex_buffer.is_none()
 			{
-				self.context.clear(WebGl2RenderingContext::COLOR_BUFFER_BIT);
 				self.context.bind_buffer(WebGl2RenderingContext::ARRAY_BUFFER, self.objects[n].vertex_buffer.as_ref());
 				let position_attribute_location = self.context.get_attrib_location(self.program.as_ref().unwrap(), "a_position") as u32;
 				self.context.vertex_attrib_pointer_with_i32(position_attribute_location, 3, WebGl2RenderingContext::FLOAT, false, 0, 0);
