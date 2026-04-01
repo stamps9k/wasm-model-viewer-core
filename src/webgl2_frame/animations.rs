@@ -56,7 +56,7 @@ pub fn initialize_animation(frame_wrap: &Rc<RefCell<WebGl2Frame>>)
 				let fps: f64 = mean::arithmetic(&frames_delta);
 				set_fps(fps);
 			},
-			_ => panic!("Don't know how you got here!")
+			_ => panic!("Don't know how you got here! Somehow modulo 10 operation gave value {}", i)
 		}
 
 		{
@@ -64,35 +64,40 @@ pub fn initialize_animation(frame_wrap: &Rc<RefCell<WebGl2Frame>>)
 			let mut frame = frame_closure.borrow_mut();
 
 			//Update the camera position
+			rust_log(&"Updating camera matrix...", &"super_verbose_wasm_math");
 			frame.camera_matrix = update_camera_position(&frame.camera_matrix, &controller_values);
+			rust_log(&"...camera matrix update complete.", &"super_verbose_wasm_math");
 
 			//Mutable reference to the Webgl Frame
 			let tmp = frame.program.as_mut().unwrap().clone();
 
 			//Pass worldspace transfomration to the GPU
+			rust_log(&"Passing camera matrix to shader...", &"super_verbose_gpu_mem");
 			let position_index = frame.context.get_uniform_location(&tmp, "u_camera_matrix");
 			frame.context.uniform_matrix4fv_with_f32_array(position_index.as_ref(), false, &frame.camera_matrix);
+			rust_log(&"...shader binding complete.", &"super_verbose_gpu_mem");
 			
 			//Pass mouse position to the GPU
 			let mouse_position = controller_values.mouse_position;
-			rust_super_super_verbose
+			rust_log
 			(
-				&(
-					"Passing u_mouse_position ".to_owned() + 
-					mouse_position[0].to_string().as_str() + " x " + mouse_position[1].to_string().as_str() + 
-					" to shader"
-				)
+				&format!("Passing u_mouse position {}, {} to shader...", mouse_position[0], mouse_position[1]), 
+				&"super_verbose_gpu_mem"
 			);
 			let mouse_position_index = frame.context.get_uniform_location(&tmp, "u_mouse_position");
 			frame.context.uniform2fv_with_f32_array(mouse_position_index.as_ref(), &mouse_position);
+			rust_log(&format!("...shader binding complete."), &"super_verbose_gpu_mem");
 
 			//Pass time to the GPU
 			time = time + ((now - base) / 1000.0) as f32;
-			rust_super_super_verbose(&("Passing u_time ".to_owned() + time.to_string().as_str() + " to shader."));
+			rust_log(&format!("Passing u_time {} to shader...", time), &"super_verbose_gpu_mem");
 			let time_index = frame.context.get_uniform_location(&tmp, "u_time");
 			frame.context.uniform1f(time_index.as_ref(), time);
+			rust_log(&format!("...shader binding complete."), &"super_verbose_gpu_mem");
 
+			rust_log("Starting draw calls...", &"super_verbose_gpu_mem");
 			frame.draw();
+			rust_log("...all draw calls complete...", &"super_verbose_gpu_mem");
 
 			// Set the body's text content to how many times this
 			// requestAnimationFrame callback has fired.

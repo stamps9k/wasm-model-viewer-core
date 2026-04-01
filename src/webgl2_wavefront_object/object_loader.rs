@@ -1,4 +1,5 @@
-use crate::logger;
+use crate::logger::*;
+
 use wavefront_obj::obj::*;
 use js_sys::*;
 use std::io::Cursor;
@@ -42,7 +43,7 @@ impl WebGl2WavefrontObject
 
 		for n in 0..self.obj.geometry[0].shapes.len()
 		{
-			let Primitive::Triangle(x, y, z) = self.obj.geometry[0].shapes[n].primitive else { logger::rust_warn("Not Triangle"); continue; };
+			let Primitive::Triangle(x, y, z) = self.obj.geometry[0].shapes[n].primitive else { rust_log(&"Not Triangle", &"warn_wasm_parse"); continue; };
 			shapes_out.push(y.0 as u16);
 			shapes_out.push(z.0 as u16);
 			shapes_out.push(x.0 as u16);
@@ -104,24 +105,6 @@ impl WebGl2WavefrontObject
 
 		}
 
-		logger::rust_warn
-		(
-			&("Quick check 1 - largest[".to_owned() +
-			&self.largest[0].to_string() + ", " +
-			&self.largest[1].to_string() + ", " +
-			&self.largest[2].to_string() + ", " +
-			"]")
-		);
-
-		logger::rust_warn
-		(
-			&("Quick check 1 - smallest[".to_owned() +
-			&self.smallest[0].to_string() + ", " +
-			&self.smallest[1].to_string() + ", " +
-			&self.smallest[2].to_string() + ", " +
-			"]")
-		);
-
 		return vertices_out;
 	}
 
@@ -138,7 +121,6 @@ impl WebGl2WavefrontObject
 		{
 			vertices_out.push(self.obj.tex_vertices[n].u as f32);
 			vertices_out.push(self.obj.tex_vertices[n].v as f32);
-			//vertices_out.push(data.tex_vertices[n].w as f32);
 		}
 		return vertices_out;
 	}
@@ -230,7 +212,7 @@ impl WebGl2WavefrontObject
 		let (width, height) = rgba_img.dimensions();
 		self.texture_height = height as i32;
 		self.texture_width = width as i32;
-		logger::rust_info(&("Image Size: ".to_owned() + width.to_string().as_str() + " x " + height.to_string().as_str()));
+		rust_log(&format!("Image size: {} x {}", width, height), &"info_wasm_parse");
 
 		// Access raw pixel data
 		let pixels = rgba_img.as_raw();
@@ -250,20 +232,15 @@ impl WebGl2WavefrontObject
 	*/
 	pub(in super) fn log_vertex_indices(&mut self, vertex_indices: &Vec<u16>)
 	{
-		logger::rust_super_super_verbose(&("Loaded vertex indices are: "));
+		rust_log(&"Loaded vertex indices are:", &"super_super_verbose_wasm_parse");
 		for n in 0..vertex_indices.len()
 		{
 			if n % 3 == 0
 			{
-				logger::rust_super_super_verbose
+				rust_log
 				(
-					&(
-						vertex_indices[n].to_string().as_str().to_owned() + 
-						" " + 
-						vertex_indices[n + 1].to_string().as_str() +
-						" " + 
-						vertex_indices[n + 2].to_string().as_str()	
-					)
+					&format!("{}, {}, {}", vertex_indices[n], vertex_indices[n + 1], vertex_indices[n + 2]), 
+					&"super_super_verbose_wasm_parse"
 				);
 			}
 		}
@@ -276,25 +253,19 @@ impl WebGl2WavefrontObject
 	*/
 	pub(in super) fn log_merged_vertex_and_texture_positions(&mut self, coords: &Vec<f32>)
 	{
-		logger::rust_super_super_verbose
-		(
-			&(
-				"Merged vertex & texture positions size is ".to_owned() + coords.len().to_string().as_str() +
-				" covering " + (coords.len() / 5).to_string().as_str() + " items"
-			)
-		);
-		logger::rust_super_super_verbose(&("Merged vertex & texture positions buffer is : "));
+		rust_log(&"Merged vertex & texture positions array is:", &"super_super_verbose_wasm_parse");
 		for n in 0..coords.len()
 		{
 			if n % 5 == 0
 			{
-				logger::rust_super_super_verbose
+				rust_log
 				(
-					&(
-						coords[n].to_string().as_str().to_owned() + ", " + coords[n + 1].to_string().as_str() + ", " + coords[n + 2].to_string().as_str() + 
-						" - " + 
-						coords[n + 3].to_string().as_str() + " " + coords[n + 4].to_string().as_str()
-					)
+					&format!
+					(
+						"{}, {}, {} - {}, {}", 
+						coords[n], coords[n + 1], coords[n + 2], coords[n + 3], coords[n + 4]
+					), 
+					&"super_super_verbose_wasm_parse"
 				);
 			}
 		}
@@ -307,7 +278,7 @@ impl WebGl2WavefrontObject
 	*/
 	pub(in super) fn log_js_uint8_array(&mut self, array: &js_sys::Uint8Array)
 	{
-		logger::rust_super_super_verbose(&("Loaded texure coordinates are: "));
-		logger::rust_super_super_verbose(&(array.to_string().as_string().unwrap()));
+		rust_log(&"Loaded texure coordinates are:", &"super_super_verbose_wasm_parse");
+		rust_log(&(array.to_string().as_string().unwrap()), &"super_super_verbose_wasm_parse");
 	}
 }

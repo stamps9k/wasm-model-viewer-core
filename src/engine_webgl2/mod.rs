@@ -20,7 +20,7 @@ impl EngineWebGl2
 	#[wasm_bindgen(constructor)]
     pub fn new(resources: Map) -> Result<Self, JsValue> 
 	{
-		rust_info(&"Initialising webgl...");
+		rust_log(&"Initialising webgl...", &"info_wasm_scene");
 		let frame = Rc::new
 		(
 			RefCell::new
@@ -29,7 +29,7 @@ impl EngineWebGl2
 			)
 		);
 		initialize_animation(&frame.clone());
-		rust_info(&"...webgl initialisation complete.");
+		rust_log(&"...webgl initialisation compplete.", &"info_wasm_scene");
 
 		return Ok
 		(
@@ -42,7 +42,9 @@ impl EngineWebGl2
 
 	pub fn update_scene(&self, resources: Map) -> Result<(), JsValue>
 	{
-		let _ = self.frame.borrow_mut().update_scene(resources);	
+		rust_log(&"Refeshing scene with new data...", &"info_wasm_scene");
+		let _ = self.frame.borrow_mut().update_scene(resources);
+		rust_log(&"...scene refresh complete.", &"info_wasm_scene");
 		return Ok(());
 	}
 }

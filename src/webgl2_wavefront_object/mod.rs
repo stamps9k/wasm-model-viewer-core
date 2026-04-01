@@ -57,35 +57,38 @@ impl WebGl2WavefrontObject
 		*
 		*/
 		let vertex_positions: Vec<f32> = self.get_vertex_positions();
-		rust_verbose(&("Vertices only is size: ".to_owned() + vertex_positions.len().to_string().as_str()));
+		rust_log(&format!("Vertices array is size: {}", vertex_positions.len()), &"verbose_wasm_parse");
 		let vertex_indices: Vec<u16> = self.get_vertex_indices();
-		rust_verbose(&("Vertex Indices is size: ".to_owned() + vertex_indices.len().to_string().as_str()));
+		rust_log(&format!("Vertex indices array is size: {}", vertex_indices.len()), &"verbose_wasm_parse");
 
 		let texture_vertices: Vec<f32> = self.get_texture_positions();
-		rust_verbose(&("Texutre Vertices is size: ".to_owned() + texture_vertices.len().to_string().as_str()));
+		rust_log(&format!("Texture Vertices array is size: {}", texture_vertices.len()), &"verbose_wasm_parse");
+
 		let texture_indices: Vec<u16> = self.get_texture_indices();
-		rust_verbose(&("Texutre Indices is size: ".to_owned() + texture_indices.len().to_string().as_str()));
+		rust_log(&format!("Texture Indices array is size: {}", texture_indices.len()), &"verbose_wasm_parse");
 
 		if self.textures != None
 		{
-			rust_verbose(&("Object: ".to_owned() + self.obj.name.as_str() + " identified as textured model. Processing accordingly"));
-			
+			rust_log(&format!("Object: {} identified as textured model. Processing accordingly", self.obj.name), &"info_wasm_parse");			
 			/*
 				Manage model texture and vertices
 			*/
 				// First generate the texture and vertex info
-				rust_verbose("Generating a list that has all unique combined vertex + texture positions...");
+				rust_log("Generating a list that has all unique combined vertex + texture positions...", &"info_wasm_parse");
 				let merged_array: Vec<f32> = self.merge_vertex_and_texture_positions(&vertex_positions, &vertex_indices, &texture_vertices, &texture_indices);
-				rust_verbose("...combined vertex + texture positions list completed.");
+				rust_log(&format!("Merged vertex & texture positions size is: {}", merged_array.len()), &"verbose_wasm_parse");
+				rust_log("...combined vertex + texture positions list completed.", &"info_wasm_parse");
 
 				// create the GPU buffer
-				rust_verbose("Creating  GPU buffer for vertex and texture positions array...");
+				rust_log(&"Creating GPU buffer for vertex and texture positions array...", &"verbose_wasm_gpu_mem");
 				self.vertex_and_texture_buffer = context.create_buffer();
+				rust_log(&"...GPU buffer creation complete.", &"verbose_wasm_gpu_mem");
+				rust_log(&"Binding data to GPU buffer for vertex and texture positions array...", &"verbose_wasm_gpu_data");
 				context.bind_buffer(WebGl2RenderingContext::ARRAY_BUFFER, self.vertex_and_texture_buffer.as_ref());
-				rust_verbose("...GPU buffer creation complete.");
+				rust_log(&"Data successfully bound to GPU buffer.", &"verbose_wasm_gpu_data");
 
 				//Put values into buffer
-				rust_verbose(&("Starting to buffer vertex & texture locations... "));
+				rust_log(&"Starting to buffer vertex & texture locations...", &"verbose_wasm_gpu_data");
 				unsafe {
 					let texture_coord_array = js_sys::Float32Array::view(&merged_array);
 				
@@ -96,9 +99,10 @@ impl WebGl2WavefrontObject
 						WebGl2RenderingContext::STATIC_DRAW
 					);
 				}
-				rust_verbose(&("...buffering complete."));
+				rust_log(&"...buffering complete.", &"verbose_wasm_gpu_data");
 
 				//Tell GPU how to extract vertex data from the buffer
+				rust_log(&"Binding position attribute...", &"verbose_wasm_gpu_data");
 				let position_attribute_location = context.get_attrib_location(program.as_ref().unwrap(), "a_position") as u32;
 				context.vertex_attrib_pointer_with_i32
 				(
@@ -109,8 +113,11 @@ impl WebGl2WavefrontObject
 					20, //stride
 					0 //offset
 				);
+				context.enable_vertex_attrib_array(position_attribute_location);
+				rust_log(&"...binding complete.", &"verbose_wasm_gpu_data");
 
 				//Tell GPU how to extract texture data from the buffer
+				rust_log(&"Binding texcoord attribute...", &"verbose_wasm_gpu_data");
 				let texture_attribute_location = context.get_attrib_location(program.as_ref().unwrap(), "a_texcoord") as u32;
 				context.vertex_attrib_pointer_with_i32
 				(
@@ -121,12 +128,11 @@ impl WebGl2WavefrontObject
 					20, //stride
 					12 //offset
 				);
-
-				context.enable_vertex_attrib_array(position_attribute_location);
 				context.enable_vertex_attrib_array(texture_attribute_location);
+				rust_log(&"...binding complete.", &"verbose_wasm_gpu_data");
 				
 				//Buffer the texture image
-				rust_verbose(&("Starting to buffer texture image... "));
+				rust_log(&"Starting to buffer texture image...", &"verbose_wasm_gpu_data");
 				let texture = context.create_texture().ok_or("failed to create texture")?;
 				context.active_texture(WebGl2RenderingContext::TEXTURE0);
 			    context.bind_texture(WebGl2RenderingContext::TEXTURE_2D, Some(&texture));
@@ -153,26 +159,26 @@ impl WebGl2WavefrontObject
 					Err(_err) => panic!("failed to send image data to texture buffer.")
 				};
 				context.generate_mipmap(WebGl2RenderingContext::TEXTURE_2D);
-				rust_verbose(&("...texture buffering complete."));
+				rust_log(&"...buffering complete.", &"verbose_wasm_gpu_data");
 
 			/*
 			Manage Indices for model
 			*/
-			rust_verbose(&("Starting to buffer vertex & texture position indices... "));
+			rust_log(&"Starting to buffer vertex & texture position indices...", &"verbose_wasm_gpu_data");
 			self.vertex_index_buffer = context.create_buffer();
 			context.bind_buffer(WebGl2RenderingContext::ELEMENT_ARRAY_BUFFER, self.vertex_index_buffer.as_ref());
 			unsafe {
 				let tmp_indices: Vec<u16> = (0..(merged_array.len() / 5) as u16).collect();
 				self.indices_size = tmp_indices.len();
 				let converted_indices = js_sys::Uint16Array::view(&tmp_indices);
-				rust_super_verbose(&(converted_indices.to_string().as_string().unwrap()));
+				rust_log(&format!("Full index array is {}.", converted_indices.to_string()), &"super_super_verbose_wasm_gpu_data");
 				context.buffer_data_with_array_buffer_view(
 					WebGl2RenderingContext::ELEMENT_ARRAY_BUFFER,
 					&converted_indices,
 					WebGl2RenderingContext::STATIC_DRAW,
 				);
 			}
-			rust_verbose(&("...buffering complete."));
+				rust_log(&"...buffering complete.", &"verbose_wasm_gpu_data");
 		} else {
 			/*
 				Manage Vertices for model
@@ -188,7 +194,7 @@ impl WebGl2WavefrontObject
 			*/
 			unsafe 
 			{
-				rust_verbose(&("Starting to buffer vertex data... "));
+				rust_log(&"Starting to buffer vertex locations...", &"verbose_wasm_gpu_data");
 				self.vertex_buffer = context.create_buffer();
 				context.bind_buffer(WebGl2RenderingContext::ARRAY_BUFFER, self.vertex_buffer.as_ref());
 
@@ -203,14 +209,14 @@ impl WebGl2WavefrontObject
 					WebGl2RenderingContext::STATIC_DRAW,
 				);
 				context.enable_vertex_attrib_array(position_attribute_location);
-				rust_verbose(&("..Vertex data fully buffered."));
+				rust_log(&"...buffering complete.", &"verbose_wasm_gpu_data");
 			}
 
 			/*
 				Manage Colors for model
 			*/
 			unsafe {
-				rust_verbose(&("Starting to buffer color data... "));
+				rust_log(&"Starting to buffer color data...", &"verbose_wasm_gpu_data");
 				self.color_buffer = context.create_buffer();
 				context.bind_buffer(WebGl2RenderingContext::ARRAY_BUFFER, self.color_buffer.as_ref());
 				let color_attribute_location = context.get_attrib_location(program.as_ref().unwrap(), "a_color") as u32;
@@ -234,13 +240,13 @@ impl WebGl2WavefrontObject
 					&color_array,
 					WebGl2RenderingContext::STATIC_DRAW,
 				);
-				rust_verbose(&("...color data buffering complete."));
+				rust_log(&"...buffering complete.", &"verbose_wasm_gpu_data");
 			}
 
 			/*
 			Manage Indices for model
 			*/
-			rust_verbose(&("Starting to buffer vertex indices... "));
+			rust_log(&"Starting to buffer vertex indices...", &"verbose_wasm_gpu_data");
 			self.vertex_index_buffer = context.create_buffer();
 			context.bind_buffer(WebGl2RenderingContext::ELEMENT_ARRAY_BUFFER, self.vertex_index_buffer.as_ref());
 			unsafe {
@@ -253,8 +259,7 @@ impl WebGl2WavefrontObject
 					WebGl2RenderingContext::STATIC_DRAW,
 				);
 			}
-			rust_verbose(&("..indice buffering complete."));
-
+			rust_log(&"...buffering complete.", &"verbose_wasm_gpu_data");
 
 		}
 		return Ok(());

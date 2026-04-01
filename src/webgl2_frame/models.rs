@@ -16,12 +16,12 @@ impl WebGl2Frame
 			//Ignore junk objects
 			if (&objset).objects[n].vertices.len() != 0	
 			{
-				rust_info(&("Buffering model ".to_owned() + n.to_string().as_str() + ": " + &objset.objects[n].name + "to GPU..."));
+				rust_log(&format!("Buffering model {} to GPU...", &objset.objects[n].name), &"super_verbose_wasm_scene.");
 				let mut tmp_obj: WebGl2WavefrontObject = WebGl2WavefrontObject::new(objset.objects[n].clone(), mtls.clone(), textures.clone())?;
 				let _ = tmp_obj.buffer(&self.context, &self.program);
 				self.update_l_and_s_values(&tmp_obj);
 				self.objects.push(tmp_obj);
-				rust_info(&"...model buffering complete.");
+				rust_log(&format!("model {} buffering complete...", &objset.objects[n].name), &"super_verbose_wasm_scene.");
 			}
 		}
 
