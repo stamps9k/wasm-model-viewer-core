@@ -112,7 +112,7 @@ impl WebGl2Frame
 		frame.context.clear_color(0.0, 0.0, 0.0, 0.0);
 		rust_log(&"...configuration complete.", &"verbose_wasm_gpu_mem");		
 
-		rust_log(&"Reseting the camera_matrix...", &"verbose_wasm_math");
+		rust_log(&"Reseting the camera_matrix...", &"info_wasm_math");
 		let mut central_matrix = Mat4::identity(); //Create the translation matrix to centralise object ontop of camera
 		central_matrix.translate(&frame.get_centralisation()); //Create the translation matrix to centralise object ontop of camera
 		let scale_mat: Mat4 = scaling_matrix(frame.get_scaling()); //Create the scaling matrix
@@ -120,8 +120,8 @@ impl WebGl2Frame
 		let mut translate_matrix = Mat4::identity(); //Create the translation matrix to pull the starting camera out of model
 		translate_matrix.translate(&[0.0 as f32, 0.0 as f32, -5.0 as f32]); //Create the translation matrix to pull camera out of model
 		frame.camera_matrix = *central_matrix.mul(&translate_matrix); //Combine with the operation S * T
-		m4_pretty_print_super_verbose("Camera Matrix", &frame.camera_matrix);
-		rust_log(&"...camera matrix reset complete.", &"verbose_wasm_math");
+		m4_pretty_print_verbose("Camera Matrix", &frame.camera_matrix);
+		rust_log(&"...camera matrix reset complete.", &"info_wasm_math");
 
 		return Ok(frame);
 	}
