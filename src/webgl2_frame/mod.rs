@@ -132,6 +132,8 @@ impl WebGl2Frame
 		for mut object in &mut self.objects
 		{
 			object.marked_for_deletion = true;
+			self.largest = [0.0, 0.0, 0.0];
+			self.smallest = [0.0, 0.0, 0.0];
 		}
 
 		rust_log(&"Loading shaders to memory...", &"info_wasm_parse");
