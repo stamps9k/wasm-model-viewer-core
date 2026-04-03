@@ -43,12 +43,12 @@ impl WebGl2Frame
 				camera_matrix: Mat4::identity()
 			};
 
-		rust_log(&"Loading shaders to memory...", &"info_wasm_parse");
+		rust_log(&"Loading shaders to memory...", &"info_wasm_scene");
 		let vert_shader: &str = &(resources.get(&JsValue::from_str("vert_shader")).as_string().unwrap_or(String::from("bad_value")));
-		rust_log(&format!("Vertex Shader is: {}", vert_shader), &"verbose_wasm_parse");
+		rust_log(&format!("Vertex Shader is: {}", vert_shader), &"verbose_wasm_scene");
 		let frag_shader: &str = &(resources.get(&JsValue::from_str("frag_shader")).as_string().unwrap_or(String::from("bad_value")));
-		rust_log(&format!("Fragment Shader is: {}", frag_shader), &"verbose_wasm_parse");
-		rust_log(&"...shaders load to memory complete.", &"info_wasm_parse");
+		rust_log(&format!("Fragment Shader is: {}", frag_shader), &"verbose_wasm_scene");
+		rust_log(&"...shaders load to memory complete.", &"info_wasm_scene");
 
 		rust_log(&"Compiling shaders...", &"info_wasm_gpu_mem");
 		let vert_shader = frame.compile_shader(WebGl2RenderingContext::VERTEX_SHADER, vert_shader)?;
@@ -60,17 +60,17 @@ impl WebGl2Frame
 		frame.context.use_program(frame.program.as_ref());
 		rust_log(&"...shaders linking complete", &"info_wasm_gpu_data");
 
-		rust_log(&"Loading scene to memory...", &"info_wasm_parse");
+		rust_log(&"Loading scene to memory...", &"info_wasm_scene");
 		let scene: &str = &(resources.get(&JsValue::from_str("cube")).as_string().unwrap_or(String::from("bad_value")));
-		rust_log(&"...loading complete.", &"info_wasm_parse");
+		rust_log(&"...loading complete.", &"info_wasm_scene");
 
-		rust_log(&"Loading materials to memory...", &"info_wasm_parse");
+		rust_log(&"Loading materials to memory...", &"info_wasm_scene");
 		let materials: Option<HashMap<String, String>> = get_js_sys_map_to_hashmap(&resources, "materials");
-		rust_log(&"...materials load to memory complete.", &"info_wasm_parse");
+		rust_log(&"...materials load to memory complete.", &"info_wasm_scene");
 
-		rust_log(&"Loading textures to memory...", &"info_wasm_parse");
+		rust_log(&"Loading textures to memory...", &"info_wasm_scene");
 		let textures: Option<HashMap<String, String>> = get_js_sys_map_to_hashmap(&resources, "textures");
-		rust_log(&"...textures load to memory complete.", &"info_wasm_parse");
+		rust_log(&"...textures load to memory complete.", &"info_wasm_scene");
 
 		rust_log(&"Parsing scene...", &"info_wasm_parse");
 		let objset = match wavefront_obj::obj::parse(scene)
@@ -101,7 +101,7 @@ impl WebGl2Frame
 
 		//Pass context resolution for use in shader
 		let resolution = get_window_resolution();
-		rust_log(&format!("Passing window resolution {} x {} to gpu.", resolution[0], resolution[1]), &"verbose_wasm_scene");
+		rust_log(&format!("Passing window resolution {} x {} to gpu.", resolution[0], resolution[1]), &"verbose_wasm_gpu_data");
 
 		let resolution_index = frame.context.get_uniform_location(frame.program.as_mut().unwrap(), "u_resolution");
 		frame.context.uniform2fv_with_f32_array(resolution_index.as_ref(), &resolution);
@@ -136,12 +136,12 @@ impl WebGl2Frame
 			self.smallest = [0.0, 0.0, 0.0];
 		}
 
-		rust_log(&"Loading shaders to memory...", &"info_wasm_parse");
+		rust_log(&"Loading shaders to memory...", &"info_wasm_scene");
 		let vert_shader: &str = &(resources.get(&JsValue::from_str("vert_shader")).as_string().unwrap_or(String::from("bad_value")));
 		rust_log(&format!("Vertex shader is: {}", vert_shader), &"super_verbose_wasm_parse");
 		let frag_shader: &str = &(resources.get(&JsValue::from_str("frag_shader")).as_string().unwrap_or(String::from("bad_value")));
 		rust_log(&format!("Fragement shader is: {}", frag_shader), &"super_verbose_wasm_parse");
-		rust_log(&"...shaders load to memory complete.", &"info_wasm_parse");
+		rust_log(&"...shaders load to memory complete.", &"info_wasm_scene");
 
 		rust_log(&"Compiling shaders...", &"info_wasm_gpu_mem");
 		let vert_shader = self.compile_shader(WebGl2RenderingContext::VERTEX_SHADER, vert_shader)?;
@@ -190,13 +190,13 @@ impl WebGl2Frame
 
 		rust_log(&"...scene loading complete.", &"info_wasm_scene");
 
-		rust_log(&"Buffering scene to GPU...", &"info_wasm_parse");
+		rust_log(&"Buffering scene to GPU...", &"info_wasm_gpu_data");
 		self.buffer_scene(&objset, &mtls, &textures)?;
-		rust_log(&"...scene buffering complete.", &"info_wasm_parse");
+		rust_log(&"...scene buffering complete.", &"info_wasm_gpu_data");
 
 		//Pass context resolution for use in shader
 		let resolution = get_window_resolution();
-		rust_log(&format!("Passing window resolution {} x {} to gpu.", resolution[0], resolution[1]), &"verbose_wasm_scene");
+		rust_log(&format!("Passing window resolution {} x {} to gpu.", resolution[0], resolution[1]), &"verbose_wasm_gpu_data");
 
 		let resolution_index = self.context.get_uniform_location(self.program.as_mut().unwrap(), "u_resolution");
 		self.context.uniform2fv_with_f32_array(resolution_index.as_ref(), &resolution);
