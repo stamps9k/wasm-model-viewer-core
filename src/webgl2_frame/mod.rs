@@ -38,8 +38,8 @@ impl WebGl2Frame
 				context: canvas.get_context("webgl2")?.unwrap().dyn_into::<web_sys::WebGl2RenderingContext>()?,  
 				program: None,
 				objects: Vec::new(),
-				largest: [0.0, 0.0, 0.0],
-    			smallest: [0.0, 0.0, 0.0],
+				largest: [f32::MIN, f32::MIN, f32::MIN],
+    			smallest: [f32::MAX, f32::MAX, f32::MAX],
 				camera_matrix: Mat4::identity()
 			};
 
@@ -132,8 +132,8 @@ impl WebGl2Frame
 		for mut object in &mut self.objects
 		{
 			object.marked_for_deletion = true;
-			self.largest = [0.0, 0.0, 0.0];
-			self.smallest = [0.0, 0.0, 0.0];
+			self.largest = [f32::MIN, f32::MIN, f32::MIN];
+			self.smallest = [f32::MAX, f32::MAX, f32::MAX];
 		}
 
 		rust_log(&"Loading shaders to memory...", &"info_wasm_scene");

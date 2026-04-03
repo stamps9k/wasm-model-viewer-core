@@ -40,7 +40,7 @@ impl WebGl2Frame
 		{
 			self.largest[0] = obj.largest[0] as f32;
 		} 
-		else if (obj.smallest[0] as f32) < self.smallest[0]
+		if (obj.smallest[0] as f32) < self.smallest[0]
 		{
 			self.smallest[0] = obj.smallest[0] as f32;
 		}
@@ -50,7 +50,7 @@ impl WebGl2Frame
 		{
 			self.largest[1] = obj.largest[1] as f32;
 		} 
-		else if (obj.smallest[1] as f32) < self.smallest[1]
+		if (obj.smallest[1] as f32) < self.smallest[1]
 		{
 			self.smallest[1] = obj.smallest[1] as f32;
 		}
@@ -60,7 +60,7 @@ impl WebGl2Frame
 		{
 			self.largest[2] = obj.largest[2] as f32;
 		} 
-		else if (obj.smallest[2] as f32) < self.smallest[2]
+		if (obj.smallest[2] as f32) < self.smallest[2]
 		{
 			self.smallest[2] = obj.smallest[2] as f32;
 		}
@@ -68,8 +68,9 @@ impl WebGl2Frame
 		(
 			&format!
 			(
-				r#"Largest values are {}, {}, {}:
-				Smallest values are {}, {}, {}:"#,
+				r#"Largest and smallest values are:
+				Largest:  {}, {}, {}
+				Smallest: {}, {}, {}"#,
 				self.largest[0], self.largest[1], self.largest[2],
 				self.smallest[0], self.smallest[1], self.smallest[2], 
 			), 
