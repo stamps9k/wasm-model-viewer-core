@@ -16,12 +16,14 @@ impl WebGl2Frame
 			//Ignore junk objects
 			if (&objset).objects[n].vertices.len() != 0	
 			{
-				rust_log(&format!("Buffering model {} to GPU...", &objset.objects[n].name), &"super_verbose_wasm_scene.");
+				rust_log(&format!("Buffering model {} to GPU...", &objset.objects[n].name), &"verbose_wasm_gpu_data.");
 				let mut tmp_obj: WebGl2WavefrontObject = WebGl2WavefrontObject::new(objset.objects[n].clone(), mtls.clone(), textures.clone())?;
 				let _ = tmp_obj.buffer(&self.context, &self.program);
+				rust_log(&format!("Setting largest and smallest values for model {}...", &objset.objects[n].name), &"verbose_wasm_parse.");
 				self.update_l_and_s_values(&tmp_obj);
+				rust_log(&"...largest and smallest values set successfully", &"verbose_wasm_parse.");
 				self.objects.push(tmp_obj);
-				rust_log(&format!("model {} buffering complete...", &objset.objects[n].name), &"super_verbose_wasm_scene.");
+				rust_log(&format!("model {} buffering complete...", &objset.objects[n].name), &"verbose_wasm_gpu_data.");
 			}
 		}
 
@@ -62,5 +64,17 @@ impl WebGl2Frame
 		{
 			self.smallest[2] = obj.smallest[2] as f32;
 		}
+		rust_log
+		(
+			&format!
+			(
+				r#"Largest values are {}, {}, {}:
+				Smallest values are {}, {}, {}:"#,
+				self.largest[0], self.largest[1], self.largest[2],
+				self.smallest[0], self.smallest[1], self.smallest[2], 
+			), 
+			&"super_verbose_wasm_parse"
+		);
+
 	}
 }
