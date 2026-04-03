@@ -341,8 +341,12 @@ impl WebGl2Frame
 	*/
 	pub fn set_projection(&mut self)
 	{
+		let fov_y: f32 = 1.0471975511965976;
+        let aspect_ratio: f32 = 0.8260869565217391;
+        let near: f32 = 0.1;
+        let far: f32 = 2000.0;
 		rust_log("Setting the projection matrix. Currently hard coded...", &"verbose_wasm_math");
-		self.projection_matrix = Mat4::create_perspective(1.0471975511965976, 0.8260869565217391, 1.0, 2000.0);
+		self.projection_matrix = Mat4::create_perspective(fov_y, aspect_ratio, near, far);
 		let position_index = self.context.get_uniform_location(self.program.as_ref().unwrap(), "u_projection_matrix");
 		self.context.uniform_matrix4fv_with_f32_array(position_index.as_ref(), false, &self.projection_matrix);
 		rust_log("...projection matrix successfully set.", &"verbose_wasm_math");

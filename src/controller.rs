@@ -66,13 +66,33 @@ pub fn update_camera_position(camera_matrix: &Mat4, controller_values: &Controll
 
     if controller_values.zoom_in
     {
-        let movement: [f32; 3] = [0.0, 0.0, 0.1]; 
+        // Extract forward vector from camera matrix (third column)
+        let forward: Vec3 = [camera_matrix[2], camera_matrix[6], camera_matrix[10]];
+
+        // Normalise it manually using .mag()
+        let magnitude = forward.mag();
+        let normalised = forward.scale(1.0 / magnitude);
+
+        // Scale by movement speed
+        let movement = normalised.scale(0.1);
+
+        // Apply to camera
         out.translate(&movement);
     }
 
     if controller_values.zoom_out
     {
-        let movement: [f32; 3] = [0.0, 0.0, -0.1]; 
+        // Extract forward vector from camera matrix (third column)
+        let forward: Vec3 = [camera_matrix[2], camera_matrix[6], camera_matrix[10]];
+
+        // Normalise it manually using .mag()
+        let magnitude = forward.mag();
+        let normalised = forward.scale(1.0 / magnitude);
+
+        // Scale by movement speed
+        let movement = normalised.scale(-0.1);
+
+        // Apply to camera
         out.translate(&movement);
     }
 
