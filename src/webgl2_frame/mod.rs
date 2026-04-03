@@ -19,7 +19,9 @@ pub struct WebGl2Frame
 	objects: Vec<WebGl2WavefrontObject>,
 	largest: [f32; 3],
     smallest: [f32; 3],
-	camera_matrix: Mat4
+	camera_matrix: Mat4,
+	projection_matrix: Mat4,
+	model_matrix: Mat4
 } 
 
 #[wasm_bindgen]
@@ -40,7 +42,9 @@ impl WebGl2Frame
 				objects: Vec::new(),
 				largest: [f32::MIN, f32::MIN, f32::MIN],
     			smallest: [f32::MAX, f32::MAX, f32::MAX],
-				camera_matrix: Mat4::identity()
+				camera_matrix: Mat4::identity(),
+				projection_matrix: Mat4::identity(),
+				model_matrix: Mat4::identity()
 			};
 
 		rust_log(&"Loading shaders to memory...", &"info_wasm_scene");
@@ -113,13 +117,8 @@ impl WebGl2Frame
 		rust_log(&"...configuration complete.", &"verbose_wasm_gpu_mem");		
 
 		rust_log(&"Reseting the camera_matrix...", &"info_wasm_math");
-		let mut central_matrix = Mat4::identity(); //Create the translation matrix to centralise object ontop of camera
-		central_matrix.translate(&frame.get_centralisation()); //Create the translation matrix to centralise object ontop of camera
-		let scale_mat: Mat4 = scaling_matrix(frame.get_scaling()); //Create the scaling matrix
-		central_matrix.mul(&scale_mat); //Combine so that scaled model moves the right amount to sit on camera
 		let mut translate_matrix = Mat4::identity(); //Create the translation matrix to pull the starting camera out of model
-		translate_matrix.translate(&[0.0 as f32, 0.0 as f32, -5.0 as f32]); //Create the translation matrix to pull camera out of model
-		frame.camera_matrix = *central_matrix.mul(&translate_matrix); //Combine with the operation S * T
+		frame.camera_matrix = *translate_matrix.translate(&[0.0 as f32, 0.0 as f32, -5.0 as f32]); //Create the translation matrix to pull camera out of model
 		m4_pretty_print_verbose("Camera Matrix", &frame.camera_matrix);
 		rust_log(&"...camera matrix reset complete.", &"info_wasm_math");
 
@@ -209,13 +208,8 @@ impl WebGl2Frame
 		self.context.clear_color(0.0, 0.0, 0.0, 0.0);
 
 		rust_log(&"Reseting the camera_matrix...", &"info_wasm_math");
-		let mut central_matrix = Mat4::identity(); //Create the translation matrix to centralise object ontop of camera
-		central_matrix.translate(&self.get_centralisation()); //Create the translation matrix to centralise object ontop of camera
-		let scale_mat: Mat4 = scaling_matrix(self.get_scaling()); //Create the scaling matrix
-		central_matrix.mul(&scale_mat); //Combine so that scaled model moves the right amount to sit on camera
 		let mut translate_matrix = Mat4::identity(); //Create the translation matrix to pull the starting camera out of model
-		translate_matrix.translate(&[0.0 as f32, 0.0 as f32, -5.0 as f32]); //Create the translation matrix to pull camera out of model
-		self.camera_matrix = *central_matrix.mul(&translate_matrix); //Combine with the operation S * T
+		self.camera_matrix = *translate_matrix.translate(&[0.0 as f32, 0.0 as f32, -5.0 as f32]); //Create the translation matrix to pull camera out of model
 		m4_pretty_print_verbose("Camera Matrix", &self.camera_matrix);
 		rust_log(&"...camera matrix reset complete.", &"info_wasm_math");
 
@@ -345,15 +339,15 @@ impl WebGl2Frame
 	* TODO let user customise
 	*
 	*/
-	pub fn set_projection(&self)
+	pub fn set_projection(&mut self)
 	{
 		rust_log("Setting the projection matrix. Currently hard coded...", &"verbose_wasm_math");
-		let projection_matrix = Mat4::create_perspective(1.0471975511965976, 0.8260869565217391, 1.0, 2000.0);
+		self.projection_matrix = Mat4::create_perspective(1.0471975511965976, 0.8260869565217391, 1.0, 2000.0);
 		let position_index = self.context.get_uniform_location(self.program.as_ref().unwrap(), "u_projection_matrix");
-		self.context.uniform_matrix4fv_with_f32_array(position_index.as_ref(), false, &projection_matrix);
+		self.context.uniform_matrix4fv_with_f32_array(position_index.as_ref(), false, &self.projection_matrix);
 		rust_log("...projection matrix successfully set.", &"verbose_wasm_math");
 
-		m4_pretty_print_super_verbose("Projection Matrix", &projection_matrix);
+		m4_pretty_print_super_verbose("Projection Matrix", &self.projection_matrix);
 	}
 
 	/*

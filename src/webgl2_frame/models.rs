@@ -1,7 +1,9 @@
 use wavefront_obj::obj::ObjSet;
 use wavefront_obj::mtl::MtlSet;
 use std::collections::HashMap;
+use webgl_matrix::*;
 
+use crate::matrix_helper::scaling_matrix;
 use crate::logger::*;
 use crate::webgl2_wavefront_object::WebGl2WavefrontObject;
 
@@ -27,9 +29,29 @@ impl WebGl2Frame
 			}
 		}
 
+		self.set_model_matrix();
 		self.set_projection();
 
 		return Ok(());
+	}
+
+	/*
+		Set the model matrix so that the scene is centered and scaled consistently across different objects
+	*/
+	fn set_model_matrix(&mut self)
+	{
+		rust_log(&"Generating the model matrix...", &"verbose_wasm_math");
+		self.model_matrix = Mat4::identity(); //Create the translation matrix to centralise object ontop of camera
+		self.model_matrix = *self.model_matrix.translate(&self.get_centralisation()); //Create the translation matrix to centralise object ontop of camera
+		m4_pretty_print_super_verbose(&"Model matrix after centralising:", &self.model_matrix);
+
+		let scale_mat: Mat4 = scaling_matrix(self.get_scaling()); //Create the scaling matrix
+		self.model_matrix.mul(&scale_mat); //Combine so that scaled model moves the right amount to sit on camera
+		m4_pretty_print_super_verbose(&"Model matrix after scaling:", &self.model_matrix);
+		
+		let position_index = self.context.get_uniform_location(self.program.as_ref().unwrap(), "u_model_matrix");
+		self.context.uniform_matrix4fv_with_f32_array(position_index.as_ref(), false, &self.model_matrix);
+		rust_log(&"...Model matrix successfully generated.", &"verbose_wasm_math");
 	}
 
 	// Checks the object's largest and smallest vertex positions and updates the frame if required. 
