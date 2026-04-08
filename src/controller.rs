@@ -18,8 +18,7 @@ pub struct ControllerValues
     pub zoom_out: bool,
     pub current_mouse_position: [f32; 2],
     pub previous_mouse_position: [f32; 2],
-    pub mouse_up: bool,
-    pub mouse_down: bool
+    pub mouse_0_down: bool
 }
 
 impl ControllerValues
@@ -35,8 +34,7 @@ impl ControllerValues
             zoom_out: false,
             current_mouse_position: [0.0, 0.0],
             previous_mouse_position: [0.0, 0.0],
-            mouse_up: false,
-            mouse_down: false
+            mouse_0_down: false
         }
     }
 }
@@ -54,7 +52,7 @@ pub fn update_camera_position(camera_matrix: &Mat4, controller_values: &Controll
 
     let rotation_angle: f32 = (PI / 180.0) as f32;
 
-    if controller_values.mouse_down
+    if controller_values.mouse_0_down
     {
         rust_log(&"Mouse is down", &"info_wasm_math");
     }

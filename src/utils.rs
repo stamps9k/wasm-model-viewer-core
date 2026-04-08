@@ -66,10 +66,70 @@ pub fn register_get_mouse_position()
     closure.forget();
 }
 
-
 pub fn get_mouse_position(event: MouseEvent) -> Option<(i32, i32)> {
     let mouse_event = event.dyn_ref::<MouseEvent>()?;
     Some((mouse_event.client_x(), mouse_event.client_y()))
+}
+
+pub fn register_mouse_down()
+{
+    //Get document
+    let document = window().unwrap().document().expect("No `document` object found");
+
+    // Convert document into an EventTarget
+    let event_target: &EventTarget = document.as_ref();
+
+    // Create a closure for the event listener when mouse is pressed down
+    let closure_mouse_down = Closure::wrap(Box::new(move |event: MouseEvent| {
+        let controller_values = get_control_flags();
+                let mut controller = controller_values.lock().unwrap();
+
+        let mouse_event = event.dyn_ref::<MouseEvent>().unwrap();
+        if mouse_event.button() == 0
+        {
+            //Log new values
+            rust_log("Mouse button 0 down.", "super_verbose_wasm_scene");
+            controller.mouse_0_down = true;
+        } 
+    }) as Box<dyn FnMut(_)>);
+
+    // Attach event listener
+    event_target
+        .add_event_listener_with_callback("mousedown", closure_mouse_down.as_ref().unchecked_ref())
+        .expect("Failed to add event listener");
+
+    // Prevent Rust from dropping the closure
+    closure_mouse_down.forget();
+}
+
+pub fn register_mouse_up()
+{
+    //Get document
+    let document = window().unwrap().document().expect("No `document` object found");
+
+    // Convert document into an EventTarget
+    let event_target: &EventTarget = document.as_ref();
+
+    // Create a closure for the event listener when mouse is pressed down
+    let closure_mouse_up = Closure::wrap(Box::new(move |event: MouseEvent| {
+        let controller_values = get_control_flags();
+                let mut controller = controller_values.lock().unwrap();
+
+        let mouse_event = event.dyn_ref::<MouseEvent>().unwrap();
+        if mouse_event.button() == 0
+        {
+            controller.mouse_0_down = false;
+            rust_log("Mouse button 0 up.", "super_verbose_wasm_scene");
+        } 
+    }) as Box<dyn FnMut(_)>);
+
+    // Attach event listener
+    event_target
+        .add_event_listener_with_callback("mouseup", closure_mouse_up.as_ref().unchecked_ref())
+        .expect("Failed to add event listener");
+
+    // Prevent Rust from dropping the closure
+    closure_mouse_up.forget();
 }
 
 pub fn get_window_resolution() -> [f32; 2]

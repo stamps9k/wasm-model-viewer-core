@@ -21,6 +21,8 @@ pub fn initialize_web_gl(resources: Map) -> Result<EngineWebGl2, JsValue>
 
 	//Register all required event listeners for interactivity
 	register_get_mouse_position();
+	register_mouse_down();
+	register_mouse_up();
 
 	return EngineWebGl2::new(resources);	
 }
