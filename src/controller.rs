@@ -16,6 +16,7 @@ pub struct ControllerValues
     pub rotate_z: bool,
     pub zoom_in: bool,
     pub zoom_out: bool,
+    pub mouse_moving: bool,
     pub current_mouse_position: [f32; 2],
     pub previous_mouse_position: [f32; 2],
     pub mouse_0_down: bool
@@ -32,6 +33,7 @@ impl ControllerValues
             rotate_z: false,
             zoom_in: false,
             zoom_out: false,
+            mouse_moving: false,
             current_mouse_position: [0.0, 0.0],
             previous_mouse_position: [0.0, 0.0],
             mouse_0_down: false
@@ -46,15 +48,26 @@ pub fn get_control_flags() -> Arc<Mutex<ControllerValues>>
         .clone()
 }
 
-pub fn update_camera_position(camera_matrix: &Mat4, controller_values: &ControllerValues) -> Mat4
+pub fn update_model_matrix(model_matrix: &Mat4, controller_values: &ControllerValues) -> Mat4
 {
-    let mut out = camera_matrix.clone();
+    let mut out = model_matrix.clone();
 
     let rotation_angle: f32 = (PI / 180.0) as f32;
 
-    if controller_values.mouse_0_down
+    if controller_values.mouse_0_down && controller_values.mouse_moving
     {
-        rust_log(&"Mouse is down", &"info_wasm_math");
+        rust_log
+        (
+            &format!
+            (
+                "Mouse delta is: {}, {}", 
+                controller_values.current_mouse_position[0] - controller_values.previous_mouse_position[0], 
+                controller_values.current_mouse_position[1] - controller_values.previous_mouse_position[1]
+            ), 
+            "super_super_verbose_wasm_scene"
+        );
+        
+        out = calculate_mouse_rotation(model_matrix, &controller_values).unwrap_or(out);
     }
 
     if controller_values.rotate_x
@@ -72,6 +85,22 @@ pub fn update_camera_position(camera_matrix: &Mat4, controller_values: &Controll
         let rotation_axis: [f32; 3] = [0.0, 0.0, 1.0]; 
         out.rotate(rotation_angle, &rotation_axis);
     }
+
+    if controller_values.rotate_x || 
+        controller_values.rotate_y || 
+        controller_values.rotate_z || 
+        controller_values.zoom_in || 
+        controller_values.zoom_out
+    {
+        m4_pretty_print_super_super_verbose("Model Matrix", &out);
+    }
+
+    return out;
+}
+
+pub fn update_camera_position(camera_matrix: &Mat4, controller_values: &ControllerValues) -> Mat4
+{
+    let mut out = camera_matrix.clone();
 
     if controller_values.zoom_in
     {
@@ -111,8 +140,37 @@ pub fn update_camera_position(camera_matrix: &Mat4, controller_values: &Controll
         controller_values.zoom_in || 
         controller_values.zoom_out
     {
-        m4_pretty_print_super_super_verbose("Camera Matrix", &camera_matrix);
+        m4_pretty_print_super_super_verbose("Camera Matrix", &out);
     }
 
     return out;
+}
+
+fn calculate_mouse_rotation(model_matrix: &Mat4, controller_values: &ControllerValues) -> Result<Mat4, String>
+{
+    let mut delta = Mat4::identity();
+    let angle: f32 = ((PI / 180.0) * 5.0) as f32;
+
+    let dx = controller_values.current_mouse_position[0] - controller_values.previous_mouse_position[0];
+    let dy = controller_values.current_mouse_position[1] - controller_values.previous_mouse_position[1];
+
+    let len = (dx * dx + dy * dy).sqrt();
+    if len < 0.001 {
+        return Err(String::from("Mouse movement too small to be calculated")); // skip this frame, no meaningful movement
+    }
+
+    //Get angle of rotation
+    let rotation_axis: Vec3 = [dy, dx, 0.0];
+    let magnitude = rotation_axis.mag();
+    let normalised: [f32; 3] = rotation_axis.scale(1.0 / magnitude);
+
+    //Rotate
+    delta.rotate(angle, &normalised);
+
+    //Copy the model_matrix and apply the rotation
+    let mut out = *model_matrix;
+    out.mul(&delta);
+    
+    //Return
+    return Ok(out);
 }

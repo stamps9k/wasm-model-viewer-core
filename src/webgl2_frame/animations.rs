@@ -34,8 +34,8 @@ pub fn initialize_animation(frame_wrap: &Rc<RefCell<WebGl2Frame>>)
 	*g.borrow_mut() = Some(Closure::new(move || {	
 		//Movement variables
 		let tmp2 = get_control_flags();
-		let controller_values = tmp2.lock().unwrap();
-		
+		let mut controller_values = tmp2.lock().unwrap();
+
 		//FPS Caclulator
 		let now = get_current_time();
 		match i as i32 % 10 
@@ -68,6 +68,11 @@ pub fn initialize_animation(frame_wrap: &Rc<RefCell<WebGl2Frame>>)
 			frame.camera_matrix = update_camera_position(&frame.camera_matrix, &controller_values);
 			rust_log(&"...camera matrix update complete.", &"super_super_verbose_wasm_math");
 
+			//Update the model matrix
+			rust_log(&"Updating maodel matrix...", &"super_super_verbose_wasm_math");
+			frame.model_matrix = update_model_matrix(&frame.model_matrix, &controller_values);
+			rust_log(&"...model matrix update complete.", &"super_super_verbose_wasm_math");
+
 			//Mutable reference to the Webgl Frame
 			let tmp = frame.program.as_mut().unwrap().clone();
 
@@ -77,6 +82,12 @@ pub fn initialize_animation(frame_wrap: &Rc<RefCell<WebGl2Frame>>)
 			frame.context.uniform_matrix4fv_with_f32_array(position_index.as_ref(), false, &frame.camera_matrix);
 			rust_log(&"...shader binding complete.", &"super_super_verbose_gpu_mem");
 			
+			//Pass model transformation to the GPU
+			rust_log(&"Passing model matrix to shader...", &"super_super_verbose_gpu_mem");
+			let position_index = frame.context.get_uniform_location(&tmp, "u_model_matrix");
+			frame.context.uniform_matrix4fv_with_f32_array(position_index.as_ref(), false, &frame.model_matrix);
+			rust_log(&"...shader binding complete.", &"super_super_verbose_gpu_mem");
+
 			//Pass mouse position to the GPU
 			let mouse_position = controller_values.current_mouse_position;
 			rust_log
@@ -98,6 +109,9 @@ pub fn initialize_animation(frame_wrap: &Rc<RefCell<WebGl2Frame>>)
 			rust_log("Starting draw calls...", &"super_super_verbose_gpu_mem");
 			frame.draw();
 			rust_log("...all draw calls complete...", &"super_super_verbose_gpu_mem");
+
+			//Reset mouse moving trigger
+			controller_values.mouse_moving = false;
 
 			// Set the body's text content to how many times this
 			// requestAnimationFrame callback has fired.

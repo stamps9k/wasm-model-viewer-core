@@ -20,7 +20,8 @@ pub struct WebGl2Frame
     smallest: [f32; 3],
 	camera_matrix: Mat4,
 	projection_matrix: Mat4,
-	model_matrix: Mat4
+	model_matrix: Mat4,
+	model_normalize_matrix: Mat4 // Special matrix to normalize the size and position of the Matrix. Must be multiplied as a final step after all other transformations are done
 } 
 
 #[wasm_bindgen]
@@ -43,7 +44,8 @@ impl WebGl2Frame
     			smallest: [f32::MAX, f32::MAX, f32::MAX],
 				camera_matrix: Mat4::identity(),
 				projection_matrix: Mat4::identity(),
-				model_matrix: Mat4::identity()
+				model_matrix: Mat4::identity(),
+				model_normalize_matrix: Mat4::identity()
 			};
 
 		rust_log(&"Loading shaders to memory...", &"info_wasm_scene");

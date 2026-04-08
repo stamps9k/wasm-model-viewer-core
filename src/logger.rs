@@ -25,20 +25,46 @@ pub fn m4_pretty_print_verbose(name: &str, matrix: &[f32; 16])
 
 pub fn m4_pretty_print_super_verbose(name: &str, matrix: &[f32; 16])
 {
-	rust_log(&format!("Matrix is {}:", name), &"super_verbose_wasm_math");
-	rust_log(&format!("{}, {}, {}, {}", matrix[0], matrix[4], matrix[8], matrix[12]), &"super_verbose_wasm_math");
-	rust_log(&format!("{}, {}, {}, {}", matrix[1], matrix[5], matrix[9], matrix[13]), &"super_verbose_wasm_math");
-	rust_log(&format!("{}, {}, {}, {}", matrix[2], matrix[6], matrix[10], matrix[14]), &"super_verbose_wasm_math");
-	rust_log(&format!("{}, {}, {}, {}", matrix[3], matrix[7], matrix[11], matrix[15]), &"super_verbose_wasm_math");
+	rust_log(
+		&format!
+		(
+			r#"
+				Matrix is {}:
+				{}, {}, {}, {}
+				{}, {}, {}, {}
+				{}, {}, {}, {}
+				{}, {}, {}, {}
+			"#, 
+			name,
+			matrix[0], matrix[4], matrix[8], matrix[12],
+			matrix[1], matrix[5], matrix[9], matrix[13],
+			matrix[2], matrix[6], matrix[10], matrix[14],
+			matrix[3], matrix[7], matrix[11], matrix[15]
+		), 
+		&"super_verbose_wasm_math"
+	);
 }
 
 pub fn m4_pretty_print_super_super_verbose(name: &str, matrix: &[f32; 16])
 {
-	rust_log(&format!("Matrix is {}:", name), &"super_super_verbose_wasm_math");
-	rust_log(&format!("{}, {}, {}, {}", matrix[0], matrix[4], matrix[8], matrix[12]), &"super_super_verbose_wasm_math");
-	rust_log(&format!("{}, {}, {}, {}", matrix[1], matrix[5], matrix[9], matrix[13]), &"super_super_verbose_wasm_math");
-	rust_log(&format!("{}, {}, {}, {}", matrix[2], matrix[6], matrix[10], matrix[14]), &"super_super_verbose_wasm_math");
-	rust_log(&format!("{}, {}, {}, {}", matrix[3], matrix[7], matrix[11], matrix[15]), &"super_super_verbose_wasm_math");
+	rust_log(
+		&format!
+		(
+			r#"
+				Matrix is {}:
+				{}, {}, {}, {}
+				{}, {}, {}, {}
+				{}, {}, {}, {}
+				{}, {}, {}, {}
+			"#, 
+			name,
+			matrix[0], matrix[4], matrix[8], matrix[12],
+			matrix[1], matrix[5], matrix[9], matrix[13],
+			matrix[2], matrix[6], matrix[10], matrix[14],
+			matrix[3], matrix[7], matrix[11], matrix[15]
+		), 
+		&"super_super_verbose_wasm_math"
+	);
 }
 
 #[wasm_bindgen]

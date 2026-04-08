@@ -50,11 +50,21 @@ pub fn register_get_mouse_position()
         update[0] = mouse_position.0 as f32;
         update[1] = mouse_position.1 as f32;
         controller.current_mouse_position = update;
+        controller.mouse_moving = true;
 
         //Log new values
         rust_log(&format!("Previous mouse position is: {}, {}", controller.previous_mouse_position[0], controller.previous_mouse_position[1]), "super_super_verbose_wasm_scene");
         rust_log(&format!("Current mouse position is: {}, {}", controller.current_mouse_position[0], controller.current_mouse_position[1]), "super_super_verbose_wasm_scene");
-
+        rust_log
+        (
+            &format!
+            (
+                "Mouse delta is: {}, {}", 
+                controller.current_mouse_position[0] - controller.previous_mouse_position[0], 
+                controller.current_mouse_position[1] - controller.previous_mouse_position[1]
+            ), 
+            "super_super_verbose_wasm_scene"
+        );
     }) as Box<dyn FnMut(_)>);
 
     // Attach event listener
