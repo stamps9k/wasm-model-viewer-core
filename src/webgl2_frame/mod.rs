@@ -129,7 +129,7 @@ impl WebGl2Frame
 	pub fn update_scene(&mut self, resources: Map) -> Result<(), JsValue>
 	{
 		//Cleaning up old scene
-		for mut object in &mut self.objects
+		for object in &mut self.objects
 		{
 			object.marked_for_deletion = true;
 			self.largest = [f32::MIN, f32::MIN, f32::MIN];
