@@ -78,11 +78,11 @@ pub fn initialize_animation(frame_wrap: &Rc<RefCell<WebGl2Frame>>)
 			rust_log(&"...shader binding complete.", &"super_super_verbose_gpu_mem");
 			
 			//Pass mouse position to the GPU
-			let mouse_position = controller_values.mouse_position;
+			let mouse_position = controller_values.current_mouse_position;
 			rust_log
 			(
 				&format!("Passing u_mouse position {}, {} to shader...", mouse_position[0], mouse_position[1]), 
-				&"super_verbose_gpu_mem"
+				&"super_super_verbose_gpu_mem"
 			);
 			let mouse_position_index = frame.context.get_uniform_location(&tmp, "u_mouse_position");
 			frame.context.uniform2fv_with_f32_array(mouse_position_index.as_ref(), &mouse_position);

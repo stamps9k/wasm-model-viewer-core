@@ -1,4 +1,5 @@
 use crate::controller::*;
+use crate::logger::*;
 
 use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::*;
@@ -38,12 +39,21 @@ pub fn register_get_mouse_position()
     let closure = Closure::wrap(Box::new(move |event: MouseEvent| {
 
         let controller_values = get_control_flags();
-        let mut controller = controller_values.lock().unwrap();
+                let mut controller = controller_values.lock().unwrap();
+
+        //Update previous mouse position with current position
+        controller.previous_mouse_position = controller.current_mouse_position;
+
+        //Get the current values and set in rust
         let mut update: [f32; 2] = [0.0, 0.0];
         let mouse_position = get_mouse_position(event).unwrap();
         update[0] = mouse_position.0 as f32;
         update[1] = mouse_position.1 as f32;
-        controller.mouse_position = update;
+        controller.current_mouse_position = update;
+
+        //Log new values
+        rust_log(&format!("Previous mouse position is: {}, {}", controller.previous_mouse_position[0], controller.previous_mouse_position[1]), "super_super_verbose_wasm_scene");
+        rust_log(&format!("Current mouse position is: {}, {}", controller.current_mouse_position[0], controller.current_mouse_position[1]), "super_super_verbose_wasm_scene");
 
     }) as Box<dyn FnMut(_)>);
 
@@ -61,19 +71,6 @@ pub fn get_mouse_position(event: MouseEvent) -> Option<(i32, i32)> {
     let mouse_event = event.dyn_ref::<MouseEvent>()?;
     Some((mouse_event.client_x(), mouse_event.client_y()))
 }
-
-//Alternative mouse position implementations. Currently expermimenting to find best type
-/*
-pub fn get_mouse_position_page(event: &Event) -> Option<(i32, i32)> {
-    let mouse_event = event.dyn_ref::<MouseEvent>()?;
-    Some((mouse_event.page_x(), mouse_event.page_y()))
-}
-
-pub fn get_mouse_position_screen(event: &Event) -> Option<(i32, i32)> {
-    let mouse_event = event.dyn_ref::<MouseEvent>()?;
-    Some((mouse_event.screen_x(), mouse_event.screen_y()))
-}
-    */
 
 pub fn get_window_resolution() -> [f32; 2]
 {

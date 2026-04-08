@@ -1,6 +1,5 @@
 use crate::logger::*;
 use crate::utils::*;
-use crate::matrix_helper::*;
 use crate::webgl2_wavefront_object::*;
 
 use wasm_bindgen::prelude::*;

@@ -1,8 +1,6 @@
 use web_sys::WebGl2RenderingContext;
 use web_sys::WebGlProgram;
 use web_sys::WebGlBuffer;
-//use wasm_bindgen::prelude::*;
-//use wasm_bindgen::JsCast;
 use rand::Rng;
 use std::collections::HashMap;
 
