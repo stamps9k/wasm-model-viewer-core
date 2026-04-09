@@ -17,6 +17,9 @@ pub struct ControllerValues
     pub zoom_in: bool,
     pub zoom_out: bool,
     pub mouse_moving: bool,
+    pub wheel_pinch: bool,
+    pub wheel_scroll: bool,
+    pub wheel_delta: [f32; 2],
     pub current_mouse_position: [f32; 2],
     pub previous_mouse_position: [f32; 2],
     pub mouse_0_down: bool
@@ -34,6 +37,9 @@ impl ControllerValues
             zoom_in: false,
             zoom_out: false,
             mouse_moving: false,
+            wheel_pinch: false,
+            wheel_scroll: false,
+            wheel_delta: [0.0, 0.0],
             current_mouse_position: [0.0, 0.0],
             previous_mouse_position: [0.0, 0.0],
             mouse_0_down: false

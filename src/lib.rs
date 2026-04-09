@@ -23,6 +23,7 @@ pub fn initialize_web_gl(resources: Map) -> Result<EngineWebGl2, JsValue>
 	register_get_mouse_position();
 	register_mouse_down();
 	register_mouse_up();
+	register_mouse_wheel();
 
 	return EngineWebGl2::new(resources);	
 }
