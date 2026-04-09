@@ -4,7 +4,6 @@ use std::cell::RefCell;
 use wasm_bindgen::prelude::*;
 use math::mean;
 
-use crate::controller;
 use crate::update_camera_position;
 use crate::utils::*;
 use crate::logger::*;
@@ -15,14 +14,14 @@ use super::WebGl2Frame;
 pub fn initialize_animation(frame_wrap: &Rc<RefCell<WebGl2Frame>>) 
 {
 	//Clone the frame for the closure
-	let frame_closure = Rc::clone(frame_wrap);
+	let frame_closure: Rc<RefCell<WebGl2Frame>> = Rc::clone(frame_wrap);
 
 	//Clone the frame for the intial animation frame request
-	let frame_animation = Rc::clone(frame_wrap);
+	let frame_animation: Rc<RefCell<WebGl2Frame>> = Rc::clone(frame_wrap);
 
 	//Closure variables
-	let f = Rc::new(RefCell::new(None));
-	let g = f.clone();
+	let f: Rc<RefCell<Option<ScopedClosure<'_, dyn FnMut()>>>> = Rc::new(RefCell::new(None));
+	let g: Rc<RefCell<Option<ScopedClosure<'_, dyn FnMut() + 'static>>>> = f.clone();
 
 	//FPS calculator variables
 	let mut base: f64 = get_current_time();
@@ -34,8 +33,8 @@ pub fn initialize_animation(frame_wrap: &Rc<RefCell<WebGl2Frame>>)
 	let mut i: f32 = 0.0;
 	*g.borrow_mut() = Some(Closure::new(move || {	
 		//Movement variables
-		let tmp2 = get_control_flags();
-		let mut controller_values = tmp2.lock().unwrap();
+		let tmp2: std::sync::Arc<std::sync::Mutex<ControllerValues>> = get_control_flags();
+		let mut controller_values: std::sync::MutexGuard<'_, ControllerValues> = tmp2.lock().unwrap();
 
 		//FPS Caclulator
 		let now = get_current_time();
@@ -62,7 +61,7 @@ pub fn initialize_animation(frame_wrap: &Rc<RefCell<WebGl2Frame>>)
 
 		{
 			//Borrow the Rc as a mutable for use in the animation
-			let mut frame = frame_closure.borrow_mut();
+			let mut frame: std::cell::RefMut<'_, WebGl2Frame> = frame_closure.borrow_mut();
 
 			//Update the camera position
 			rust_log(&"Updating camera matrix...", &"super_super_verbose_wasm_math");
@@ -79,13 +78,13 @@ pub fn initialize_animation(frame_wrap: &Rc<RefCell<WebGl2Frame>>)
 
 			//Pass worldspace transfomration to the GPU
 			rust_log(&"Passing camera matrix to shader...", &"super_super_verbose_gpu_mem");
-			let position_index = frame.context.get_uniform_location(&tmp, "u_camera_matrix");
+			let position_index: Option<web_sys::WebGlUniformLocation> = frame.context.get_uniform_location(&tmp, "u_camera_matrix");
 			frame.context.uniform_matrix4fv_with_f32_array(position_index.as_ref(), false, &frame.camera_matrix);
 			rust_log(&"...shader binding complete.", &"super_super_verbose_gpu_mem");
 			
 			//Pass model transformation to the GPU
 			rust_log(&"Passing model matrix to shader...", &"super_super_verbose_gpu_mem");
-			let position_index = frame.context.get_uniform_location(&tmp, "u_model_matrix");
+			let position_index: Option<web_sys::WebGlUniformLocation> = frame.context.get_uniform_location(&tmp, "u_model_matrix");
 			frame.context.uniform_matrix4fv_with_f32_array(position_index.as_ref(), false, &frame.model_matrix);
 			rust_log(&"...shader binding complete.", &"super_super_verbose_gpu_mem");
 
@@ -96,14 +95,14 @@ pub fn initialize_animation(frame_wrap: &Rc<RefCell<WebGl2Frame>>)
 				&format!("Passing u_mouse position {}, {} to shader...", mouse_position[0], mouse_position[1]), 
 				&"super_super_verbose_gpu_mem"
 			);
-			let mouse_position_index = frame.context.get_uniform_location(&tmp, "u_mouse_position");
+			let mouse_position_index: Option<web_sys::WebGlUniformLocation> = frame.context.get_uniform_location(&tmp, "u_mouse_position");
 			frame.context.uniform2fv_with_f32_array(mouse_position_index.as_ref(), &mouse_position);
 			rust_log(&format!("...shader binding complete."), &"super_super_verbose_gpu_mem");
 
 			//Pass time to the GPU
 			time = time + ((now - base) / 1000.0) as f32;
 			rust_log(&format!("Passing u_time {} to shader...", time), &"super_super_verbose_gpu_mem");
-			let time_index = frame.context.get_uniform_location(&tmp, "u_time");
+			let time_index: Option<web_sys::WebGlUniformLocation> = frame.context.get_uniform_location(&tmp, "u_time");
 			frame.context.uniform1f(time_index.as_ref(), time);
 			rust_log(&format!("...shader binding complete."), &"super_super_verbose_gpu_mem");
 
