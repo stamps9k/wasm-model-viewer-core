@@ -3,7 +3,7 @@ use crate::logger::*;
 
 use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::*;
-use web_sys::{window, EventTarget, MouseEvent, WheelEvent };
+use web_sys::{window, EventTarget, MouseEvent, WheelEvent, KeyboardEvent };
 use js_sys::Array;
 use js_sys::Map;
 use std::collections::HashMap;
@@ -158,17 +158,19 @@ pub fn register_mouse_wheel()
         let wheel_event = event.dyn_ref::<WheelEvent>().unwrap();
 
         controller.wheel_delta = [wheel_event.delta_x() as f32, wheel_event.delta_y() as f32];
+        controller.wheel_scroll = true;
+
 
         if wheel_event.shift_key()
         {
             // Regular scroll with shift button active.
-            controller.wheel_pinch = true;
+            controller.shift_key = true;
             rust_log(&format!("Shift scroll size {}, {} registered", wheel_event.delta_x(), wheel_event.delta_y()), "super_verbose_wasm_scene");
         } 
         else if wheel_event.ctrl_key()
         {
              // Pinch-to-zoom gesture (browser sets ctrlKey=true for this)
-            controller.wheel_pinch = true;
+            controller.ctrl_key = true;
             rust_log(&format!("Control scroll size {}, {} registered. Maybe pinch gesture JS cannot differentiate.", wheel_event.delta_x(), wheel_event.delta_y()), "super_verbose_wasm_scene");
         }
         else
@@ -187,6 +189,76 @@ pub fn register_mouse_wheel()
 
     // Prevent Rust from dropping the closure
     closure_mouse_wheel.forget();
+}
+
+pub fn register_key_down()
+{
+    //Get document
+    let document = window().unwrap().document().expect("No `document` object found");
+
+    // Convert document into an EventTarget
+    let event_target: &EventTarget = document.as_ref();
+
+    // Create a closure for the event listener when mouse is pressed down
+    let closure_key_down = Closure::wrap(Box::new(move |event: KeyboardEvent| {
+        let controller_values = get_control_flags();
+                let mut controller = controller_values.lock().unwrap();
+
+        let key_event = event.dyn_ref::<KeyboardEvent>().unwrap();
+
+        if event.repeat() { return; } //Ignore repeat key presses.
+
+        match key_event.code().as_str() {
+            "ShiftLeft" => { controller.ctrl_key = true }
+            "CtrlLeft" => { controller.shift_key = true }
+            _ => { /* Default does nothing */ }
+        }
+
+        rust_log(&format!("Keyboard {} pressed.", key_event.code()), "super_verbose_wasm_scene");
+
+    }) as Box<dyn FnMut(_)>);
+
+    // Attach event listener
+    event_target
+        .add_event_listener_with_callback("keydown", closure_key_down.as_ref().unchecked_ref())
+        .expect("Failed to add event listener");
+
+    // Prevent Rust from dropping the closure
+    closure_key_down.forget();
+}
+
+pub fn register_key_up()
+{
+    //Get document
+    let document = window().unwrap().document().expect("No `document` object found");
+
+    // Convert document into an EventTarget
+    let event_target: &EventTarget = document.as_ref();
+
+    // Create a closure for the event listener when mouse is pressed down
+    let closure_key_down = Closure::wrap(Box::new(move |event: KeyboardEvent| {
+        let controller_values = get_control_flags();
+                let mut controller = controller_values.lock().unwrap();
+
+        let key_event = event.dyn_ref::<KeyboardEvent>().unwrap();
+
+        match key_event.code().as_str() {
+            "ShiftLeft" => { controller.ctrl_key = false }
+            "CtrlLeft" => { controller.shift_key = false }
+            _ => { /* Default does nothing */ }
+        }
+
+        rust_log(&format!("Keyboard {} released.", key_event.code()), "super_verbose_wasm_scene");
+
+    }) as Box<dyn FnMut(_)>);
+
+    // Attach event listener
+    event_target
+        .add_event_listener_with_callback("keyup", closure_key_down.as_ref().unchecked_ref())
+        .expect("Failed to add event listener");
+
+    // Prevent Rust from dropping the closure
+    closure_key_down.forget();
 }
 
 pub fn get_window_resolution() -> [f32; 2]
