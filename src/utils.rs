@@ -164,19 +164,16 @@ pub fn register_mouse_wheel()
         if wheel_event.shift_key()
         {
             // Regular scroll with shift button active.
-            controller.shift_key = true;
             rust_log(&format!("Shift scroll size {}, {} registered", wheel_event.delta_x(), wheel_event.delta_y()), "super_verbose_wasm_scene");
         } 
         else if wheel_event.ctrl_key()
         {
              // Pinch-to-zoom gesture (browser sets ctrlKey=true for this)
-            controller.ctrl_key = true;
             rust_log(&format!("Control scroll size {}, {} registered. Maybe pinch gesture JS cannot differentiate.", wheel_event.delta_x(), wheel_event.delta_y()), "super_verbose_wasm_scene");
         }
         else
         {
             // Regular scroll / two-finger pan
-            controller.wheel_scroll = true;
             rust_log(&format!("Unmodified Wheel scroll size {}, {} registered", wheel_event.delta_x(), wheel_event.delta_y()), "super_verbose_wasm_scene");
         }
 
@@ -209,8 +206,8 @@ pub fn register_key_down()
         if event.repeat() { return; } //Ignore repeat key presses.
 
         match key_event.code().as_str() {
-            "ShiftLeft" => { controller.ctrl_key = true }
-            "CtrlLeft" => { controller.shift_key = true }
+            "ShiftLeft" => { controller.shift_key = true }
+            "CtrlLeft" => { controller.ctrl_key = true }
             _ => { /* Default does nothing */ }
         }
 
@@ -243,8 +240,8 @@ pub fn register_key_up()
         let key_event = event.dyn_ref::<KeyboardEvent>().unwrap();
 
         match key_event.code().as_str() {
-            "ShiftLeft" => { controller.ctrl_key = false }
-            "CtrlLeft" => { controller.shift_key = false }
+            "ShiftLeft" => { controller.shift_key = false }
+            "CtrlLeft" => { controller.ctrl_key = false }
             _ => { /* Default does nothing */ }
         }
 

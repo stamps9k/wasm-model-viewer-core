@@ -106,10 +106,11 @@ pub fn update_model_matrix(model_matrix: &Mat4, controller_values: &ControllerVa
     return out;
 }
 
-pub fn update_camera_position(camera_matrix: &Mat4, controller_values: &ControllerValues) -> Mat4
+pub fn update_camera_position(camera_matrix: &Mat4, controller_values: &mut ControllerValues) -> Mat4
 {
     let mut out = camera_matrix.clone();
 
+    // Update the camera for zoom_in check box
     if controller_values.zoom_in
     {
         // Extract forward vector from camera matrix (third column)
@@ -126,6 +127,7 @@ pub fn update_camera_position(camera_matrix: &Mat4, controller_values: &Controll
         out.translate(&movement);
     }
 
+    // Update the camera for zoom out check box
     if controller_values.zoom_out
     {
         // Extract forward vector from camera matrix (third column)
@@ -140,6 +142,27 @@ pub fn update_camera_position(camera_matrix: &Mat4, controller_values: &Controll
 
         // Apply to camera
         out.translate(&movement);
+    }
+
+    // Update the camera for mouse wheel zoom
+    if controller_values.shift_key && controller_values.wheel_scroll
+    {
+        // Extract forward vector from camera matrix (third column)
+        let forward: Vec3 = [camera_matrix[2], camera_matrix[6], camera_matrix[10]];
+
+        // Normalise it manually using .mag()
+        let magnitude = forward.mag();
+        let normalised = forward.scale(1.0 / magnitude);
+
+        // Scale by wheel delta
+        let movement = normalised.scale(controller_values.wheel_delta[1] * 0.01);
+
+        // Apply to camera
+        out.translate(&movement);
+
+        // Drop wheel data after handling
+        controller_values.wheel_scroll = false;
+        controller_values.wheel_delta = [0.0, 0.0];
     }
 
     if controller_values.rotate_x || 

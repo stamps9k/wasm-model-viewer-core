@@ -4,6 +4,7 @@ use std::cell::RefCell;
 use wasm_bindgen::prelude::*;
 use math::mean;
 
+use crate::controller;
 use crate::update_camera_position;
 use crate::utils::*;
 use crate::logger::*;
@@ -65,7 +66,7 @@ pub fn initialize_animation(frame_wrap: &Rc<RefCell<WebGl2Frame>>)
 
 			//Update the camera position
 			rust_log(&"Updating camera matrix...", &"super_super_verbose_wasm_math");
-			frame.camera_matrix = update_camera_position(&frame.camera_matrix, &controller_values);
+			frame.camera_matrix = update_camera_position(&frame.camera_matrix, &mut *controller_values);
 			rust_log(&"...camera matrix update complete.", &"super_super_verbose_wasm_math");
 
 			//Update the model matrix
