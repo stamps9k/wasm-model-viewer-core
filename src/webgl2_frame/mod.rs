@@ -91,7 +91,7 @@ impl WebGl2Frame
 		{
 			rust_log(&"Parsing materials...", &"verbose_wasm_parse");
 			let material_text = materials.unwrap().into_values().next().expect("bad_value");
-			let mtls = match wavefront_obj::mtl::parse(material_text)
+			match wavefront_obj::mtl::parse(material_text)
 			{
 				Ok(mtls) => mtls,
 				Err(e) => panic!("{}", e)
