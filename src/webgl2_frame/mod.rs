@@ -86,14 +86,14 @@ impl WebGl2Frame
 		rust_log(&"...scene parsing complete.", &"info_wasm_parse");
 
 		//If required parse the materials
-		let mtls: Option<wavefront_obj::mtl::MtlSet> = None;
+		let mut mtls: Option<wavefront_obj::mtl::MtlSet> = None;
 		if !materials.is_none()
 		{
 			rust_log(&"Parsing materials...", &"verbose_wasm_parse");
 			let material_text = materials.unwrap().into_values().next().expect("bad_value");
 			match wavefront_obj::mtl::parse(material_text)
 			{
-				Ok(mtls) => mtls,
+				Ok(mtls_result) => { mtls = Some(mtls_result) },
 				Err(e) => panic!("{}", e)
 			};
 			rust_log(&"...Materials parsing complete.", &"verbose_wasm_parse");
@@ -246,77 +246,7 @@ impl WebGl2Frame
 		for n in 0..self.objects.len()
 		{
 			rust_log(&format!("Initiating draw call for object {}...", n), &"super_super_verbose_wasm_scene");
-
-			rust_log(&format!("Drawing {} indices...", self.objects[n].indices_size), &"super_super_verbose_wasm_gpu_data");
-			// If the object is untextured, just grab the position attribute for feeding from the model 
-			if !self.objects[n].vertex_buffer.is_none()
-			{
-				rust_log("UNTEXTURED OBJECT. Binding position data...", &"super_super_verbose_gpu_data");
-				self.context.bind_buffer(WebGl2RenderingContext::ARRAY_BUFFER, self.objects[n].vertex_buffer.as_ref());
-				let position_attribute_location = self.context.get_attrib_location(self.program.as_ref().unwrap(), "a_position") as u32;
-				self.context.vertex_attrib_pointer_with_i32(position_attribute_location, 3, WebGl2RenderingContext::FLOAT, false, 0, 0);
-				self.context.enable_vertex_attrib_array(position_attribute_location);
-				rust_log("...position data binding complete.", &"super_super_verbose_gpu_data");
-			// Else if there is a texture involved, grab the position and texture attributes
-			} 
-			else if !self.objects[n].vertex_and_texture_buffer.is_none()
-			{
-				self.context.bind_buffer(WebGl2RenderingContext::ARRAY_BUFFER, self.objects[n].vertex_and_texture_buffer.as_ref());				
-				
-				rust_log("TEXTURED OBJECT. Binding position data...", &"super_super_verbose_gpu_data");
-				let position_attribute_location = self.context.get_attrib_location(self.program.as_ref().unwrap(), "a_position") as u32;
-				self.context.vertex_attrib_pointer_with_i32
-				(
-					position_attribute_location, //index
-					3, //size
-					WebGl2RenderingContext::FLOAT, //data type
-					false, //normalized
-					20, //stride
-					0 //offset
-				);
-				rust_log("...position data binding complete.", &"super_super_verbose_gpu_data");
-
-				rust_log("TEXTURED OBJECT. Binding texture data...", &"super_super_verbose_gpu_data");				
-				let texture_attribute_location = self.context.get_attrib_location(self.program.as_ref().unwrap(), "a_texcoord") as u32;
-				self.context.vertex_attrib_pointer_with_i32
-				(
-					texture_attribute_location, //index
-					2, //size
-					WebGl2RenderingContext::FLOAT, //data type
-					false, //normalized 
-					20, //stride
-					12 //offset
-				);
-				rust_log("...texture data binding complete.", &"super_super_verbose_gpu_data");
-
-				self.context.enable_vertex_attrib_array(position_attribute_location);
-				self.context.enable_vertex_attrib_array(texture_attribute_location);
-			}
-
-
-			// Bind the color buffer and set the shader attribute for it to read to
-			if !self.objects[n].color_buffer.is_none()
-			{
-				rust_log("UNTEXTURED OBJECT. Binding color data...", &"super_super_verbose_gpu_data");
-				self.context.bind_buffer(WebGl2RenderingContext::ARRAY_BUFFER, self.objects[n].color_buffer.as_ref());
-				let color_attribute_location = self.context.get_attrib_location(self.program.as_ref().unwrap(), "a_color") as u32;
-				self.context.vertex_attrib_pointer_with_i32(color_attribute_location, 4, WebGl2RenderingContext::FLOAT, false, 0, 0);
-				self.context.enable_vertex_attrib_array(color_attribute_location);
-				rust_log("...color data binding complete.", &"super_super_verbose_gpu_data");
-			}
-
-			// Bind the vertex indices buffer
-			if !self.objects[n].vertex_index_buffer.is_none()
-			{
-				rust_log("Binding index data...", &"super_super_verbose_gpu_data");
-				self.context.bind_buffer(WebGl2RenderingContext::ELEMENT_ARRAY_BUFFER, self.objects[n].vertex_index_buffer.as_ref());
-				rust_log("...index data binding complete.", &"super_super_verbose_gpu_data");
-			}
-
-			// Finally draw
-			self.context.draw_elements_with_f64(WebGl2RenderingContext::TRIANGLES, self.objects[n].indices_size as i32, WebGl2RenderingContext::UNSIGNED_SHORT, 0.0);
-			rust_log(&format!("...{} indices drawn.", self.objects[n].indices_size), &"super_super_verbose_wasm_gpu_data");
-
+			self.objects[n].draw(&self.context, self.program.as_ref().unwrap());
 			rust_log(&format!("...drawing of object {} complete.", n), &"super_super_verbose_wasm_scene");
 		}
 		

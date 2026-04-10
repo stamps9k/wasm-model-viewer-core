@@ -12,6 +12,7 @@ pub struct WebGl2WavefrontObject
 	obj: wavefront_obj::obj::Object,
 	mtls: Option<wavefront_obj::mtl::MtlSet>,
 	pub vertex_buffer: Option<WebGlBuffer>,
+	pub vertex_and_color_buffer: Option<WebGlBuffer>,
 	pub vertex_and_texture_buffer: Option<WebGlBuffer>,
 	pub vertex_index_buffer: Option<WebGlBuffer>,
     pub indices_size: usize,
@@ -32,6 +33,7 @@ impl WebGl2WavefrontObject
 			obj: obj,
 			mtls: mtls,
 			vertex_buffer: None,
+			vertex_and_color_buffer: None,
 			vertex_and_texture_buffer: None,
 			vertex_index_buffer: None,
 			indices_size: 0,
@@ -57,10 +59,17 @@ impl WebGl2WavefrontObject
 		{
 			rust_log(&format!("Object: {} identified as textured model. Processing accordingly", self.obj.name), &"info_wasm_parse");			
 			self.textured_object_gpu_buffer(context, program)?;
-		} else { // No textures and no materials defined 
-			rust_log(&format!("Object: {} identified as no texture and no materials model. Processing accordingly", self.obj.name), &"info_wasm_parse");
-			self.no_materials_object_gpu_buffer(context, program)?;
+		} else if self.is_diffuse_model() {
+			rust_log(&format!("Object: {} identified as a diffuse model. Processing accordingly", self.obj.name), &"info_wasm_parse");
+			self.diffuse_object_gpu_buffer(context, program)?;
+		} else if self.is_unlit_model() { // No textures and no materials defined 
+			rust_log(&format!("Object: {} identified as an unlit model. Processing accordingly", self.obj.name), &"info_wasm_parse");
+			self.unlit_object_gpu_buffer(context, program)?;
+		} else {
+			rust_log(&format!("Object: {} did not match any known type. Processing as an unlit model.", self.obj.name), &"warn_wasm_parse");
+			self.unlit_object_gpu_buffer(context, program)?;
 		}
+
 		return Ok(());
 	}
 
@@ -80,6 +89,27 @@ impl WebGl2WavefrontObject
             )
     }
 
+	pub(in super) fn is_diffuse_model(&self) -> bool
+    {
+        return 
+            self.mtls != None &&
+            (
+                self.mtls.as_ref() .unwrap().materials[0].ambient_map == None &&
+                self.mtls.as_ref() .unwrap().materials[0].diffuse_map == None &&
+                self.mtls.as_ref() .unwrap().materials[0].specular_map == None &&
+                self.mtls.as_ref() .unwrap().materials[0].specular_exponent_map == None &&
+                self.mtls.as_ref() .unwrap().materials[0].dissolve_map == None &&
+                self.mtls.as_ref() .unwrap().materials[0].displacement_map == None &&
+                self.mtls.as_ref() .unwrap().materials[0].decal_map == None &&
+                self.mtls.as_ref() .unwrap().materials[0].bump_map == None
+            )
+    }
+
+	pub(in super) fn is_unlit_model(&self) -> bool
+	{
+		return self.mtls == None;
+	}
+
 	pub fn cleanup(&mut self, context: &WebGl2RenderingContext)
 	{
 		context.disable_vertex_attrib_array(0); // a_position
@@ -92,5 +122,6 @@ impl WebGl2WavefrontObject
 }
 
 mod mesh_data_extractor;
+mod gpu_drawer;
 mod gpu_uploader;
 mod texture_decoder;

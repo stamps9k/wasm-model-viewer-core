@@ -1,6 +1,9 @@
+use std::{ collections::HashMap };
+
 use crate::logger::*;
 
-use wavefront_obj::obj::*;
+use wavefront_obj::mtl::Material;
+use wavefront_obj::obj::Primitive;
 
 use super::WebGl2WavefrontObject;
 
@@ -27,6 +30,72 @@ impl WebGl2WavefrontObject
 		return None;
 	}	
 
+
+	/*
+	 *
+	 * Generates an merged array of vertex positions + RGBA color values for a diffuse object 
+	 *
+	 */
+	pub(in super) fn get_merged_vertex_and_color_values(&mut self, vertex_positions: &Vec<f32>, vertex_indices: &Vec<u16>, color_array: &Vec<f32>) -> Vec<f32>
+	{
+		let mut merged_vertex_and_color_values: Vec<f32> = Vec::new();
+
+		for n in 0..vertex_indices.len()
+		{
+			merged_vertex_and_color_values.push(vertex_positions[(vertex_indices[n] as usize * 3) + 0]);
+			merged_vertex_and_color_values.push(vertex_positions[(vertex_indices[n] as usize * 3) + 1]);
+			merged_vertex_and_color_values.push(vertex_positions[(vertex_indices[n] as usize * 3) + 2]);
+			merged_vertex_and_color_values.push(color_array[(n * 4) + 0]);
+			merged_vertex_and_color_values.push(color_array[(n * 4) + 1]);
+			merged_vertex_and_color_values.push(color_array[(n * 4) + 2]);
+			merged_vertex_and_color_values.push(color_array[(n * 4) + 3]);
+		}
+
+		self.log_merged_vertex_and_color_values(&merged_vertex_and_color_values);
+
+		return merged_vertex_and_color_values;
+	}
+
+	/*
+	 *
+	 * Generate a list of 3 RGBA colors for each face in the model 
+	 *
+	 */
+	pub(in super) fn get_color_values(&mut self) -> Vec<f32>
+	{
+		let mut colors_out: Vec<f32> = Vec::new();
+		let mut mtls_lookup: HashMap<String, Material> = HashMap::new();
+
+		for i in 0..self.mtls.as_ref().unwrap().materials.len()
+		{
+			mtls_lookup.insert(self.mtls.as_ref().unwrap().materials[i].name.clone(), self.mtls.as_ref().unwrap().materials[i].clone());
+		}
+
+		for i in 0..self.obj.geometry.len()
+		{
+			let mtl = mtls_lookup.get(&self.obj.geometry[i].material_name.as_ref().unwrap().clone()).unwrap();
+
+			for j in 0..self.obj.geometry[i].shapes.len()
+			{
+				colors_out.push(mtl.color_diffuse.r as f32);
+				colors_out.push(mtl.color_diffuse.g as f32);
+				colors_out.push(mtl.color_diffuse.b as f32);
+				colors_out.push(1.0); // For now assumes all materials have alpha of 1.0
+				colors_out.push(mtl.color_diffuse.r as f32);
+				colors_out.push(mtl.color_diffuse.g as f32);
+				colors_out.push(mtl.color_diffuse.b as f32);
+				colors_out.push(1.0); // For now assumes all materials have alpha of 1.0
+				colors_out.push(mtl.color_diffuse.r as f32);
+				colors_out.push(mtl.color_diffuse.g as f32);
+				colors_out.push(mtl.color_diffuse.b as f32);
+				colors_out.push(1.0); // For now assumes all materials have alpha of 1.0
+			}
+		}
+
+		return colors_out;
+
+	}
+
 	/*
 	*
 	*	Fetch the vertex index data as stored in the model. 
@@ -38,12 +107,15 @@ impl WebGl2WavefrontObject
 	{
 		let mut shapes_out: Vec<u16> = Vec::new();
 
-		for n in 0..self.obj.geometry[0].shapes.len()
+		for i in 0..self.obj.geometry.len()
 		{
-			let Primitive::Triangle(x, y, z) = self.obj.geometry[0].shapes[n].primitive else { rust_log(&"Not Triangle", &"warn_wasm_parse"); continue; };
-			shapes_out.push(y.0 as u16);
-			shapes_out.push(z.0 as u16);
-			shapes_out.push(x.0 as u16);
+			for j in 0..self.obj.geometry[i].shapes.len()
+			{
+				let Primitive::Triangle(x, y, z) = self.obj.geometry[i].shapes[j].primitive else { rust_log(&"Not Triangle", &"warn_wasm_parse"); continue; };
+				shapes_out.push(y.0 as u16);
+				shapes_out.push(z.0 as u16);
+				shapes_out.push(x.0 as u16);
+			}
 		}
 
 		self.log_vertex_indices(&shapes_out);	
@@ -193,6 +265,31 @@ impl WebGl2WavefrontObject
 				rust_log
 				(
 					&format!("{}, {}, {}", vertex_indices[n], vertex_indices[n + 1], vertex_indices[n + 2]), 
+					&"super_super_verbose_wasm_parse"
+				);
+			}
+		}
+	}
+
+	/*
+	*
+	*	Log the merged vertex and texture coordinates in a nice format
+	*
+	*/
+	pub(in super) fn log_merged_vertex_and_color_values(&mut self, coords: &Vec<f32>)
+	{
+		rust_log(&"Merged vertex & color values array is:", &"super_super_verbose_wasm_parse");
+		for n in 0..coords.len()
+		{
+			if n % 7 == 0
+			{
+				rust_log
+				(
+					&format!
+					(
+						"{}, {}, {} - {}, {}, {}, {}", 
+						coords[n], coords[n + 1], coords[n + 2], coords[n + 3], coords[n + 4], coords[n + 5], coords[n + 6]
+					), 
 					&"super_super_verbose_wasm_parse"
 				);
 			}

@@ -241,6 +241,10 @@ impl WebGl2WavefrontObject
 		rust_log(&format!("Vertices array is size: {}", vertex_positions.len()), &"verbose_wasm_parse");
 		let vertex_indices: Vec<u16> = self.get_vertex_indices();
 		rust_log(&format!("Vertex indices array is size: {}", vertex_indices.len()), &"verbose_wasm_parse");
+        let color_values: Vec<f32> = self.get_color_values();
+        rust_log(&format!("Color array is size: {}", color_values.len()), &"verbose_wasm_parse");
+        let merge_vertex_and_color_data: Vec<f32> = self.get_merged_vertex_and_color_values(&vertex_positions, &vertex_indices, &color_values);
+        rust_log(&format!("Merged color and vertex array is size: {}", merge_vertex_and_color_data.len()), &"verbose_wasm_parse");
 
         /*
             Manage Vertices for model
@@ -257,65 +261,56 @@ impl WebGl2WavefrontObject
         unsafe 
         {
             rust_log(&"Starting to buffer vertex locations...", &"verbose_wasm_gpu_data");
-            self.vertex_buffer = context.create_buffer();
-            context.bind_buffer(WebGl2RenderingContext::ARRAY_BUFFER, self.vertex_buffer.as_ref());
+            self.vertex_and_color_buffer = context.create_buffer();
+            context.bind_buffer(WebGl2RenderingContext::ARRAY_BUFFER, self.vertex_and_color_buffer.as_ref());
 
             let position_attribute_location = context.get_attrib_location(program.as_ref().unwrap(), "a_position") as u32;
-            context.vertex_attrib_pointer_with_i32(position_attribute_location, 3, WebGl2RenderingContext::FLOAT, false, 0, 0);	
-                    
-            let vert_array = js_sys::Float32Array::view(&vertex_positions);
+            context.vertex_attrib_pointer_with_i32
+            (
+                position_attribute_location, 
+                3, 
+                WebGl2RenderingContext::FLOAT, 
+                false, 
+                28, 
+                0
+            );	
+
+            let color_attribute_location: u32 = context.get_attrib_location(program.as_ref().unwrap(), "a_color") as u32;
+            context.vertex_attrib_pointer_with_i32
+            (
+                color_attribute_location, 
+                4, 
+                WebGl2RenderingContext::FLOAT, 
+                false, 
+                28, 
+                12
+            );	
+
+            let vert_and_color_array = js_sys::Float32Array::view(&merge_vertex_and_color_data);
             context.buffer_data_with_array_buffer_view
             (
                 WebGl2RenderingContext::ARRAY_BUFFER,
-                &vert_array,
+                &vert_and_color_array,
                 WebGl2RenderingContext::STATIC_DRAW,
             );
             context.enable_vertex_attrib_array(position_attribute_location);
-            rust_log(&"...buffering complete.", &"verbose_wasm_gpu_data");
-        }
-
-        /*
-            Manage Colors for model
-        */
-        unsafe {
-            rust_log(&"Starting to buffer color data...", &"verbose_wasm_gpu_data");
-            self.color_buffer = context.create_buffer();
-            context.bind_buffer(WebGl2RenderingContext::ARRAY_BUFFER, self.color_buffer.as_ref());
-            let color_attribute_location = context.get_attrib_location(program.as_ref().unwrap(), "a_color") as u32;
-            context.vertex_attrib_pointer_with_i32(color_attribute_location, 4, WebGl2RenderingContext::FLOAT, false, 0, 0);
             context.enable_vertex_attrib_array(color_attribute_location);
-    
-            //Currently junk colors. Only care about matching vertex count in sample cube
-            let mut rng = rand::rng();
-            let mut colors: Vec<f32> = Vec::new();
-            for _ in 0..self.obj.vertices.len()
-            {
-                colors.push(rng.random_range(0.0..=1.0));
-                colors.push(rng.random_range(0.0..=1.0));
-                colors.push(rng.random_range(0.0..=1.0));
-                colors.push(1.0);
-            }
-            let color_array = js_sys::Float32Array::view(&colors);
-            context.buffer_data_with_array_buffer_view
-            (
-                WebGl2RenderingContext::ARRAY_BUFFER,
-                &color_array,
-                WebGl2RenderingContext::STATIC_DRAW,
-            );
             rust_log(&"...buffering complete.", &"verbose_wasm_gpu_data");
         }
 
         /*
             Manage Indices for model
         */
-        rust_log(&"Starting to buffer vertex indices...", &"verbose_wasm_gpu_data");
+        rust_log(&"Starting to buffer vertex & color position indices...", &"verbose_wasm_gpu_data");
         self.vertex_index_buffer = context.create_buffer();
         context.bind_buffer(WebGl2RenderingContext::ELEMENT_ARRAY_BUFFER, self.vertex_index_buffer.as_ref());
-        unsafe 
-        {
-            let tmp_indices = self.get_vertex_indices();
-            self.indices_size = tmp_indices.len();	 
+        unsafe {
+            let tmp_indices: Vec<u16> = (0..(merge_vertex_and_color_data.len() / 7) as u16).collect();
+            rust_log(&format!("tmp_indices is length {}", tmp_indices.len()), "warn_wasm_parse");
+            rust_log(&format!("merge_vertex_and_color_data is length {}", merge_vertex_and_color_data.len()), "warn_wasm_parse");
+            self.indices_size = tmp_indices.len();
             let converted_indices = js_sys::Uint16Array::view(&tmp_indices);
+            rust_log(&format!("Full index array is {}.", converted_indices.to_string()), &"super_super_verbose_wasm_parse");
             context.buffer_data_with_array_buffer_view(
                 WebGl2RenderingContext::ELEMENT_ARRAY_BUFFER,
                 &converted_indices,
