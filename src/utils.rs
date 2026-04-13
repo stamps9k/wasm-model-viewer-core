@@ -3,7 +3,7 @@ use crate::logger::*;
 
 use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::*;
-use web_sys::{window, EventTarget, MouseEvent, WheelEvent, KeyboardEvent };
+use web_sys::{window, EventTarget, MouseEvent, WheelEvent, KeyboardEvent, HtmlCanvasElement };
 use js_sys::Array;
 use js_sys::Map;
 use std::collections::HashMap;
@@ -145,10 +145,13 @@ pub fn register_mouse_up()
 pub fn register_mouse_wheel()
 {
     //Get document
-    let document = window().unwrap().document().expect("No `document` object found");
+    let canvas = window().unwrap().document().unwrap().get_element_by_id("glCanvas")
+        .unwrap()
+        .dyn_into::<HtmlCanvasElement>()
+        .unwrap();
 
     // Convert document into an EventTarget
-    let event_target: &EventTarget = document.as_ref();
+    let event_target: &EventTarget = canvas.as_ref();
 
     // Create a closure for the event listener when mouse is pressed down
     let closure_mouse_wheel = Closure::wrap(Box::new(move |event: WheelEvent| {
@@ -164,6 +167,7 @@ pub fn register_mouse_wheel()
         if wheel_event.shift_key()
         {
             // Regular scroll with shift button active.
+            wheel_event.prevent_default();
             rust_log(&format!("Shift scroll size {}, {} registered", wheel_event.delta_x(), wheel_event.delta_y()), "super_verbose_wasm_scene");
         } 
         else if wheel_event.ctrl_key()
