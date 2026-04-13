@@ -172,7 +172,8 @@ pub fn register_mouse_wheel()
         } 
         else if wheel_event.ctrl_key()
         {
-             // Pinch-to-zoom gesture (browser sets ctrlKey=true for this)
+            // Pinch-to-zoom gesture (browser sets ctrlKey=true for this). Can also be regular scroll with ctrl key pressed
+            wheel_event.prevent_default();
             rust_log(&format!("Control scroll size {}, {} registered. Maybe pinch gesture JS cannot differentiate.", wheel_event.delta_x(), wheel_event.delta_y()), "super_verbose_wasm_scene");
         }
         else
@@ -211,7 +212,7 @@ pub fn register_key_down()
 
         match key_event.code().as_str() {
             "ShiftLeft" => { controller.shift_key = true }
-            "CtrlLeft" => { controller.ctrl_key = true }
+            "ControlLeft" => { controller.ctrl_key = true }
             _ => { /* Default does nothing */ }
         }
 

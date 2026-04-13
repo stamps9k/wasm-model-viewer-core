@@ -165,6 +165,33 @@ pub fn update_camera_position(camera_matrix: &Mat4, controller_values: &mut Cont
         controller_values.wheel_delta = [0.0, 0.0];
     }
 
+    //Update the camera for whose wheel pan
+    if controller_values.ctrl_key && controller_values.wheel_scroll
+    {
+        // Extract horizontal vector from camera matrix (first column) and normalise
+        let horizontal: Vec3 = [camera_matrix[0], camera_matrix[4], camera_matrix[8]];
+        let magnitude_h = horizontal.mag();
+        let normalised_h = horizontal.scale(1.0 / magnitude_h);
+
+        // Extract vertical vector from camera matrix (second column) and normalise
+        let vertical: Vec3 = [camera_matrix[1], camera_matrix[5], camera_matrix[9]];
+        let magnitude_v = vertical.mag();
+        let normalised_v = vertical.scale(1.0 / magnitude_v);
+
+
+        // Scale by wheel delta
+        let movement_h = normalised_h.scale(controller_values.wheel_delta[0] * -0.01);
+        let movement_v = normalised_v.scale(controller_values.wheel_delta[1] * 0.01);
+
+        // Apply to camera
+        out.translate(&movement_h);
+        out.translate(&movement_v);
+
+        // Drop wheel data after handling
+        controller_values.wheel_scroll = false;
+        controller_values.wheel_delta = [0.0, 0.0];
+    }
+
     if controller_values.rotate_x || 
         controller_values.rotate_y || 
         controller_values.rotate_z || 
