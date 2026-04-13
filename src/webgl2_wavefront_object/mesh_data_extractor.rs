@@ -204,24 +204,27 @@ impl WebGl2WavefrontObject
 	{
 		let mut shapes_out: Vec<u32> = Vec::new();
 
-		for n in 0..self.obj.geometry[0].shapes.len()
+		for i in 0..self.obj.geometry.len()
 		{
-			let Primitive::Triangle(x, y, z) = self.obj.geometry[0].shapes[n].primitive else { break };
-			match y.1 
+			for j in 0..self.obj.geometry[i].shapes.len()
 			{
-				Some(y) => shapes_out.push(y as u32),
-				None => break
-			};
-			match z.1 
-			{
-				Some(z) => shapes_out.push(z as u32),
-				None => break
-			};
-			match x.1 
-			{
-				Some(x) => shapes_out.push(x as u32),
-				None => break
-			};
+				let Primitive::Triangle(x, y, z) = self.obj.geometry[i].shapes[j].primitive else { break };
+				match y.1 
+				{
+					Some(y) => shapes_out.push(y as u32),
+					None => break
+				};
+				match z.1 
+				{
+					Some(z) => shapes_out.push(z as u32),
+					None => break
+				};
+				match x.1 
+				{
+					Some(x) => shapes_out.push(x as u32),
+					None => break
+				};
+			}
 		}
 
 		return shapes_out;
