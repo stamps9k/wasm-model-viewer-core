@@ -36,7 +36,7 @@ impl WebGl2WavefrontObject
 	 * Generates an merged array of vertex positions + RGBA color values for a diffuse object 
 	 *
 	 */
-	pub(in super) fn get_merged_vertex_and_color_values(&mut self, vertex_positions: &Vec<f32>, vertex_indices: &Vec<u16>, color_array: &Vec<f32>) -> Vec<f32>
+	pub(in super) fn get_merged_vertex_and_color_values(&mut self, vertex_positions: &Vec<f32>, vertex_indices: &Vec<u32>, color_array: &Vec<f32>) -> Vec<f32>
 	{
 		let mut merged_vertex_and_color_values: Vec<f32> = Vec::new();
 
@@ -103,18 +103,18 @@ impl WebGl2WavefrontObject
 	*	Note 2 - fetched in the order y, z, x as for some reason the parser library stores the data in a different order to the model
 	*
 	*/
-	pub(in super) fn get_vertex_indices(&mut self) -> Vec<u16> 
+	pub(in super) fn get_vertex_indices(&mut self) -> Vec<u32> 
 	{
-		let mut shapes_out: Vec<u16> = Vec::new();
+		let mut shapes_out: Vec<u32> = Vec::new();
 
 		for i in 0..self.obj.geometry.len()
 		{
 			for j in 0..self.obj.geometry[i].shapes.len()
 			{
 				let Primitive::Triangle(x, y, z) = self.obj.geometry[i].shapes[j].primitive else { rust_log(&"Not Triangle", &"warn_wasm_parse"); continue; };
-				shapes_out.push(y.0 as u16);
-				shapes_out.push(z.0 as u16);
-				shapes_out.push(x.0 as u16);
+				shapes_out.push(y.0 as u32);
+				shapes_out.push(z.0 as u32);
+				shapes_out.push(x.0 as u32);
 			}
 		}
 
@@ -200,26 +200,26 @@ impl WebGl2WavefrontObject
 	*	Note 1 - fetched in the order y, z, x as for some reason the parser library stores the data in a different order to the model
 	*
 	*/
-	pub(in super) fn get_texture_indices(&mut self) -> Vec<u16>
+	pub(in super) fn get_texture_indices(&mut self) -> Vec<u32>
 	{
-		let mut shapes_out: Vec<u16> = Vec::new();
+		let mut shapes_out: Vec<u32> = Vec::new();
 
 		for n in 0..self.obj.geometry[0].shapes.len()
 		{
 			let Primitive::Triangle(x, y, z) = self.obj.geometry[0].shapes[n].primitive else { break };
 			match y.1 
 			{
-				Some(y) => shapes_out.push(y as u16),
+				Some(y) => shapes_out.push(y as u32),
 				None => break
 			};
 			match z.1 
 			{
-				Some(z) => shapes_out.push(z as u16),
+				Some(z) => shapes_out.push(z as u32),
 				None => break
 			};
 			match x.1 
 			{
-				Some(x) => shapes_out.push(x as u16),
+				Some(x) => shapes_out.push(x as u32),
 				None => break
 			};
 		}
@@ -232,7 +232,7 @@ impl WebGl2WavefrontObject
 	*	Merge the vertex and texture position data so that it can be stored in a single OpenGL buffer
 	*
 	*/
-	pub(in super) fn merge_vertex_and_texture_positions(&mut self, vertex_positions: &Vec<f32>, vertex_indices: &Vec<u16>, texture_positions: &Vec<f32>, texture_indices: &Vec<u16>) -> Vec<f32>
+	pub(in super) fn merge_vertex_and_texture_positions(&mut self, vertex_positions: &Vec<f32>, vertex_indices: &Vec<u32>, texture_positions: &Vec<f32>, texture_indices: &Vec<u32>) -> Vec<f32>
 	{
 		let mut merged_vertex_and_texture_positions: Vec<f32> = Vec::new();
 
@@ -255,7 +255,7 @@ impl WebGl2WavefrontObject
 	*	Log the vertex indices in a nice format 
 	*
 	*/
-	pub(in super) fn log_vertex_indices(&mut self, vertex_indices: &Vec<u16>)
+	pub(in super) fn log_vertex_indices(&mut self, vertex_indices: &Vec<u32>)
 	{
 		rust_log(&"Loaded vertex indices are:", &"super_super_verbose_wasm_parse");
 		for n in 0..vertex_indices.len()

@@ -43,7 +43,7 @@ impl WebGl2WavefrontObject
         context.bind_buffer(WebGl2RenderingContext::ELEMENT_ARRAY_BUFFER, self.vertex_index_buffer.as_ref());
         rust_log("...index data binding complete.", &"super_super_verbose_gpu_data");
         
-        context.draw_elements_with_f64(WebGl2RenderingContext::TRIANGLES, self.indices_size as i32, WebGl2RenderingContext::UNSIGNED_SHORT, 0.0);
+        context.draw_elements_with_f64(WebGl2RenderingContext::TRIANGLES, self.indices_size as i32, WebGl2RenderingContext::UNSIGNED_INT, 0.0);
         rust_log(&format!("...{} indices drawn.", self.indices_size), &"super_super_verbose_wasm_gpu_data");
     }
 
@@ -76,18 +76,11 @@ impl WebGl2WavefrontObject
 
         rust_log("...position and color data binding complete.", &"super_super_verbose_gpu_data");
 
-        //rust_log("UNLIT OBJECT. Binding color data...", &"super_super_verbose_gpu_data");
-        //context.bind_buffer(WebGl2RenderingContext::ARRAY_BUFFER, self.color_buffer.as_ref());
-        //let color_attribute_location = context.get_attrib_location(program, "a_color") as u32;
-        //context.vertex_attrib_pointer_with_i32(color_attribute_location, 4, WebGl2RenderingContext::FLOAT, false, 0, 0);
-        //context.enable_vertex_attrib_array(color_attribute_location);
-        //rust_log("...color data binding complete.", &"super_super_verbose_gpu_data");
-
         rust_log("UNLIT OBJECT. Binding index data...", &"super_super_verbose_gpu_data");
         context.bind_buffer(WebGl2RenderingContext::ELEMENT_ARRAY_BUFFER, self.vertex_index_buffer.as_ref());
         rust_log("...index data binding complete.", &"super_super_verbose_gpu_data");
 
-        context.draw_elements_with_f64(WebGl2RenderingContext::TRIANGLES, self.indices_size as i32, WebGl2RenderingContext::UNSIGNED_SHORT, 0.0);
+        context.draw_elements_with_f64(WebGl2RenderingContext::TRIANGLES, self.indices_size as i32, WebGl2RenderingContext::UNSIGNED_INT, 0.0);
         rust_log(&format!("...{} indices drawn.", self.indices_size), &"super_super_verbose_wasm_gpu_data");
     }
 
@@ -128,7 +121,7 @@ impl WebGl2WavefrontObject
         context.bind_buffer(WebGl2RenderingContext::ELEMENT_ARRAY_BUFFER, self.vertex_index_buffer.as_ref());
         rust_log("...index data binding complete.", &"super_super_verbose_gpu_data");
 
-        context.draw_elements_with_f64(WebGl2RenderingContext::TRIANGLES, self.indices_size as i32, WebGl2RenderingContext::UNSIGNED_SHORT, 0.0);
+        context.draw_elements_with_f64(WebGl2RenderingContext::TRIANGLES, self.indices_size as i32, WebGl2RenderingContext::UNSIGNED_INT, 0.0);
         rust_log(&format!("...{} indices drawn.", self.indices_size), &"super_super_verbose_wasm_gpu_data");
 
     }
