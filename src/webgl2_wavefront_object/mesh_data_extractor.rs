@@ -34,6 +34,44 @@ impl WebGl2WavefrontObject
 		return merged_vertex_and_color_values;
 	}
 
+	pub(in super) fn get_normal_positions(&mut self) -> Vec<f32>
+	{
+		let mut normals_out: Vec<f32> = Vec::new();
+
+		for n in 0..self.obj.normals.len()
+		{
+			normals_out.push(self.obj.normals[n].x as f32);
+			normals_out.push(self.obj.normals[n].y as f32);
+			normals_out.push(self.obj.normals[n].z as f32);	
+		}
+
+		return normals_out
+	}
+
+	/*
+	*
+	*	Fetch the normal index data as stored in the model. 
+	*	Note 1 - indexes are reduced by 1 versus the raw model data due to OpenGL using 0 indexing
+	*	Note 2 - fetched in the order y, z, x as for some reason the parser library stores the data in a different order to the model
+	*
+	*/
+	pub(in super) fn get_normal_indices(&mut self) -> Vec<u32> 
+	{
+		let mut shapes_out: Vec<u32> = Vec::new();
+
+		for i in 0..self.obj.geometry.len()
+		{
+			for j in 0..self.obj.geometry[i].shapes.len()
+			{
+				let Primitive::Triangle(x, y, z) = self.obj.geometry[i].shapes[j].primitive else { rust_log(&"Not Triangle", &"warn_wasm_parse"); continue; };
+				shapes_out.push(y.2.unwrap() as u32);
+				shapes_out.push(z.2.unwrap() as u32);
+				shapes_out.push(x.2.unwrap() as u32);
+			}
+		}
+		return shapes_out;
+	}
+
 	/*
 	 *
 	 * Generate a list of 3 RGBA colors for each face in the model 
@@ -256,6 +294,37 @@ impl WebGl2WavefrontObject
 
 		return merged_vertex_texture_and_color_data;
 	}
+
+	/*
+	*
+	*	Merge the vertex, texture and color data so that it can be stored in a single OpenGL buffer
+	*
+	*/
+	pub(in super) fn merge_vertex_texture_normal_color_data(&mut self, vertex_positions: &Vec<f32>, vertex_indices: &Vec<u32>, texture_positions: &Vec<f32>, texture_indices: &Vec<u32>, normal_positions: &Vec<f32>, normal_indices: &Vec<u32>, color_array: &Vec<f32>) -> Vec<f32>
+	{
+		let mut merged_vertex_texture_normal_color_data: Vec<f32> = Vec::new();
+
+		for n in 0..vertex_indices.len()
+		{
+			merged_vertex_texture_normal_color_data.push(vertex_positions[(vertex_indices[n] as usize * 3) + 0]);
+			merged_vertex_texture_normal_color_data.push(vertex_positions[(vertex_indices[n] as usize * 3) + 1]);
+			merged_vertex_texture_normal_color_data.push(vertex_positions[(vertex_indices[n] as usize * 3) + 2]);
+			merged_vertex_texture_normal_color_data.push(texture_positions[(texture_indices[n] as usize * 2) + 0]);
+			merged_vertex_texture_normal_color_data.push(1.0 - (texture_positions[(texture_indices[n] as usize * 2) + 1]));
+			merged_vertex_texture_normal_color_data.push(normal_positions[(normal_indices[n] as usize * 3) + 0]);
+			merged_vertex_texture_normal_color_data.push(normal_positions[(normal_indices[n] as usize * 3) + 1]);
+			merged_vertex_texture_normal_color_data.push(normal_positions[(normal_indices[n] as usize * 3) + 2]);
+			merged_vertex_texture_normal_color_data.push(color_array[(n * 4) + 0]);
+			merged_vertex_texture_normal_color_data.push(color_array[(n * 4) + 1]);
+			merged_vertex_texture_normal_color_data.push(color_array[(n * 4) + 2]);
+			merged_vertex_texture_normal_color_data.push(color_array[(n * 4) + 3]);
+		}
+
+		self.log_merged_vertex_texture_and_color_data(&merged_vertex_texture_normal_color_data);
+
+		return merged_vertex_texture_normal_color_data;
+	}
+
 
 	/*
 	*

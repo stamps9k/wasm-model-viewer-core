@@ -23,13 +23,17 @@ impl WebGl2WavefrontObject
 		rust_log(&format!("Texture Indices array is size: {}", texture_indices.len()), &"verbose_wasm_parse");
         let color_values: Vec<f32> = self.get_color_values();
         rust_log(&format!("Color array is size: {}", color_values.len()), &"verbose_wasm_parse");
+        let normal_positions: Vec<f32> = self.get_normal_positions();
+        rust_log(&format!("Normal positions array is size: {}", normal_positions.len()), &"verbose_wasm_parse");
+        let normal_indices: Vec<u32> = self.get_normal_indices();
+        rust_log(&format!("Normals indices array is size: {}", normal_indices.len()), &"verbose_wasm_parse");
 
         /*
             Manage model texture and vertices
         */
         // First generate the texture and vertex info
         rust_log("Generating a list that has all unique combined vertex, texture and color data...", &"info_wasm_parse");
-        let merged_array: Vec<f32> = self.merge_vertex_texture_and_color_data(&vertex_positions, &vertex_indices, &texture_vertices, &texture_indices, &color_values);
+        let merged_array: Vec<f32> = self.merge_vertex_texture_normal_color_data(&vertex_positions, &vertex_indices, &texture_vertices, &texture_indices, &normal_positions, &normal_indices, &color_values);
         rust_log(&format!("Merged vertex, texture and color data size is: {}", merged_array.len()), &"verbose_wasm_parse");
         rust_log("...combined vertex, texture and color list completed.", &"info_wasm_parse");
 
@@ -64,7 +68,7 @@ impl WebGl2WavefrontObject
             3, //size
             WebGl2RenderingContext::FLOAT, //data type
             false, //normalized
-            36, //stride
+            48, //stride
             0 //offset
         );
         context.enable_vertex_attrib_array(position_attribute_location);
@@ -79,11 +83,26 @@ impl WebGl2WavefrontObject
             2, //size
             WebGl2RenderingContext::FLOAT, //data type
             false, //normalized 
-            36, //stride
+            48, //stride
             12 //offset
         );
         context.enable_vertex_attrib_array(texture_attribute_location);
         rust_log(&"...binding complete.", &"verbose_wasm_gpu_data");
+
+        //Tell GPU how to extract normal data from the buffer
+        rust_log(&"Binding normal attribute...", &"verbose_wasm_gpu_data");
+        let normal_attribute_location = context.get_attrib_location(program.as_ref().unwrap(), "a_normal") as u32;
+        context.vertex_attrib_pointer_with_i32
+        (
+            normal_attribute_location, //index
+            3, //size
+            WebGl2RenderingContext::FLOAT, //data type
+            false, //normalized 
+            48, //stride
+            20 //offset
+        );
+        context.enable_vertex_attrib_array(normal_attribute_location);
+        rust_log(&"...binding complete.", &"verbose_wasm_gpu_data");        
 
         //Tell GPU how to extract color data from the buffer
         rust_log(&"Binding color attribute...", &"verbose_wasm_gpu_data");
@@ -94,8 +113,8 @@ impl WebGl2WavefrontObject
             4, //size
             WebGl2RenderingContext::FLOAT, //data type
             false, //normalized 
-            36, //stride
-            20 //offset
+            48, //stride
+            32 //offset
         );
         context.enable_vertex_attrib_array(texture_attribute_location);
         rust_log(&"...binding complete.", &"verbose_wasm_gpu_data");
@@ -136,7 +155,7 @@ impl WebGl2WavefrontObject
         rust_log(&"Starting to buffer vertex & texture position indices...", &"verbose_wasm_gpu_data");
         self.vertex_index_buffer = context.create_buffer();
         context.bind_buffer(WebGl2RenderingContext::ELEMENT_ARRAY_BUFFER, self.vertex_index_buffer.as_ref());
-        let tmp_indices: Vec<u32> = (0..(merged_array.len() / 9) as u32).collect();
+        let tmp_indices: Vec<u32> = (0..(merged_array.len() / 12) as u32).collect();
         self.indices_size = tmp_indices.len();
         unsafe 
         {

@@ -94,7 +94,7 @@ impl WebGl2WavefrontObject
             3, //size
             WebGl2RenderingContext::FLOAT, //data type
             false, //normalized
-            36, //stride
+            48, //stride
             0 //offset
         );
         rust_log("...position data binding complete.", &"super_super_verbose_gpu_data");
@@ -107,10 +107,23 @@ impl WebGl2WavefrontObject
             2, //size
             WebGl2RenderingContext::FLOAT, //data type
             false, //normalized 
-            36, //stride
+            48, //stride
             12 //offset
         );
         rust_log("...texture data binding complete.", &"super_super_verbose_gpu_data");
+
+        rust_log("TEXTURED OBJECT. Binding normal data...", &"super_super_verbose_gpu_data");				
+        let normal_attribute_location = context.get_attrib_location(program, "a_normal") as u32;
+        context.vertex_attrib_pointer_with_i32
+        (
+            normal_attribute_location, //index
+            3, //size
+            WebGl2RenderingContext::FLOAT, //data type
+            false, //normalized 
+            48, //stride
+            20 //offset
+        );
+        rust_log("...normal data binding complete.", &"super_super_verbose_gpu_data");
 
         rust_log("TEXTURED OBJECT. Binding diffuse color data...", &"super_super_verbose_gpu_data");				
         let color_attribute_location = context.get_attrib_location(program, "a_color") as u32;
@@ -120,13 +133,14 @@ impl WebGl2WavefrontObject
             4, //size
             WebGl2RenderingContext::FLOAT, //data type
             false, //normalized 
-            36, //stride
-            20 //offset
+            48, //stride
+            32 //offset
         );
         rust_log("...color data binding complete.", &"super_super_verbose_gpu_data");
 
         context.enable_vertex_attrib_array(position_attribute_location);
         context.enable_vertex_attrib_array(texture_attribute_location);
+        //context.enable_vertex_attrib_array(normal_attribute_location);
         context.enable_vertex_attrib_array(color_attribute_location);
 
         rust_log("TEXTURED OBJECT. Binding index data...", &"super_super_verbose_gpu_data");
