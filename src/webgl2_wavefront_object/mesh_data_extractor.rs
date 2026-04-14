@@ -9,28 +9,6 @@ use super::WebGl2WavefrontObject;
 
 impl WebGl2WavefrontObject
 {
-	pub(in super) fn get_material_name(&mut self) -> String
-	{
-		return self.obj.geometry[0].material_name.clone().unwrap();
-	}
-
-	pub(in super) fn get_texture_name(&mut self) -> Option<String>
-	{
-		let mtl_name = self.get_material_name();
-
-		// loop through materials until you find the one
-		for material in self.mtls.clone().unwrap().materials
-		{
-			if material.name == mtl_name
-			{
-				return material.diffuse_map;
-			} 
-		}
-
-		return None;
-	}	
-
-
 	/*
 	 *
 	 * Generates an merged array of vertex positions + RGBA color values for a diffuse object 
@@ -75,7 +53,7 @@ impl WebGl2WavefrontObject
 		{
 			let mtl = mtls_lookup.get(&self.obj.geometry[i].material_name.as_ref().unwrap().clone()).unwrap();
 
-			for j in 0..self.obj.geometry[i].shapes.len()
+			for _j in 0..self.obj.geometry[i].shapes.len()
 			{
 				colors_out.push(mtl.color_diffuse.r as f32);
 				colors_out.push(mtl.color_diffuse.g as f32);
@@ -91,7 +69,6 @@ impl WebGl2WavefrontObject
 				colors_out.push(1.0); // For now assumes all materials have alpha of 1.0
 			}
 		}
-
 		return colors_out;
 
 	}
@@ -255,6 +232,33 @@ impl WebGl2WavefrontObject
 
 	/*
 	*
+	*	Merge the vertex, texture and color data so that it can be stored in a single OpenGL buffer
+	*
+	*/
+	pub(in super) fn merge_vertex_texture_and_color_data(&mut self, vertex_positions: &Vec<f32>, vertex_indices: &Vec<u32>, texture_positions: &Vec<f32>, texture_indices: &Vec<u32>, color_array: &Vec<f32>) -> Vec<f32>
+	{
+		let mut merged_vertex_texture_and_color_data: Vec<f32> = Vec::new();
+
+		for n in 0..vertex_indices.len()
+		{
+			merged_vertex_texture_and_color_data.push(vertex_positions[(vertex_indices[n] as usize * 3) + 0]);
+			merged_vertex_texture_and_color_data.push(vertex_positions[(vertex_indices[n] as usize * 3) + 1]);
+			merged_vertex_texture_and_color_data.push(vertex_positions[(vertex_indices[n] as usize * 3) + 2]);
+			merged_vertex_texture_and_color_data.push(texture_positions[(texture_indices[n] as usize * 2) + 0]);
+			merged_vertex_texture_and_color_data.push(1.0 - (texture_positions[(texture_indices[n] as usize * 2) + 1]));
+			merged_vertex_texture_and_color_data.push(color_array[(n * 4) + 0]);
+			merged_vertex_texture_and_color_data.push(color_array[(n * 4) + 1]);
+			merged_vertex_texture_and_color_data.push(color_array[(n * 4) + 2]);
+			merged_vertex_texture_and_color_data.push(color_array[(n * 4) + 3]);
+		}
+
+		self.log_merged_vertex_texture_and_color_data(&merged_vertex_texture_and_color_data);
+
+		return merged_vertex_texture_and_color_data;
+	}
+
+	/*
+	*
 	*	Log the vertex indices in a nice format 
 	*
 	*/
@@ -323,4 +327,30 @@ impl WebGl2WavefrontObject
 			}
 		}
 	}
+
+	/*
+	*
+	*	Log the merged vertex, texture and color data in a nice format
+	*
+	*/
+	pub(in super) fn log_merged_vertex_texture_and_color_data(&mut self, coords: &Vec<f32>)
+	{
+		rust_log(&"Merged vertex, texture & color array is:", &"super_super_verbose_wasm_parse");
+		for n in 0..coords.len()
+		{
+			if n % 9 == 0
+			{
+				rust_log
+				(
+					&format!
+					(
+						"{}, {}, {} - {}, {} - {}, {}, {}, {}", 
+						coords[n], coords[n + 1], coords[n + 2], coords[n + 3], coords[n + 4], coords[n + 5], coords[n + 6], coords[n + 7], coords[n + 8]
+					), 
+					&"super_super_verbose_wasm_parse"
+				);
+			}
+		}
+	}
+
 }

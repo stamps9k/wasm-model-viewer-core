@@ -1,6 +1,5 @@
 use web_sys::WebGl2RenderingContext;
 use web_sys::WebGlProgram;
-use rand::Rng;
 
 use crate::logger::*;
 
@@ -20,7 +19,6 @@ impl WebGl2WavefrontObject
         {
             self.draw_textured_object(context, program);
         }
-
     }
 
     pub(in super) fn draw_unlit_object(&self, context: &WebGl2RenderingContext, program: &WebGlProgram)
@@ -96,7 +94,7 @@ impl WebGl2WavefrontObject
             3, //size
             WebGl2RenderingContext::FLOAT, //data type
             false, //normalized
-            20, //stride
+            36, //stride
             0 //offset
         );
         rust_log("...position data binding complete.", &"super_super_verbose_gpu_data");
@@ -109,13 +107,27 @@ impl WebGl2WavefrontObject
             2, //size
             WebGl2RenderingContext::FLOAT, //data type
             false, //normalized 
-            20, //stride
+            36, //stride
             12 //offset
         );
         rust_log("...texture data binding complete.", &"super_super_verbose_gpu_data");
 
+        rust_log("TEXTURED OBJECT. Binding diffuse color data...", &"super_super_verbose_gpu_data");				
+        let color_attribute_location = context.get_attrib_location(program, "a_color") as u32;
+        context.vertex_attrib_pointer_with_i32
+        (
+            color_attribute_location, //index
+            4, //size
+            WebGl2RenderingContext::FLOAT, //data type
+            false, //normalized 
+            36, //stride
+            20 //offset
+        );
+        rust_log("...color data binding complete.", &"super_super_verbose_gpu_data");
+
         context.enable_vertex_attrib_array(position_attribute_location);
         context.enable_vertex_attrib_array(texture_attribute_location);
+        context.enable_vertex_attrib_array(color_attribute_location);
 
         rust_log("TEXTURED OBJECT. Binding index data...", &"super_super_verbose_gpu_data");
         context.bind_buffer(WebGl2RenderingContext::ELEMENT_ARRAY_BUFFER, self.vertex_index_buffer.as_ref());

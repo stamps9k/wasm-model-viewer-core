@@ -17,21 +17,21 @@ impl WebGl2WavefrontObject
 		rust_log(&format!("Vertices array is size: {}", vertex_positions.len()), &"verbose_wasm_parse");
 		let vertex_indices: Vec<u32> = self.get_vertex_indices();
 		rust_log(&format!("Vertex indices array is size: {}", vertex_indices.len()), &"verbose_wasm_parse");
-
 		let texture_vertices: Vec<f32> = self.get_texture_positions();
 		rust_log(&format!("Texture Vertices array is size: {}", texture_vertices.len()), &"verbose_wasm_parse");
-
 		let texture_indices: Vec<u32> = self.get_texture_indices();
 		rust_log(&format!("Texture Indices array is size: {}", texture_indices.len()), &"verbose_wasm_parse");
+        let color_values: Vec<f32> = self.get_color_values();
+        rust_log(&format!("Color array is size: {}", color_values.len()), &"verbose_wasm_parse");
 
         /*
             Manage model texture and vertices
         */
         // First generate the texture and vertex info
-        rust_log("Generating a list that has all unique combined vertex + texture positions...", &"info_wasm_parse");
-        let merged_array: Vec<f32> = self.merge_vertex_and_texture_positions(&vertex_positions, &vertex_indices, &texture_vertices, &texture_indices);
-        rust_log(&format!("Merged vertex & texture positions size is: {}", merged_array.len()), &"verbose_wasm_parse");
-        rust_log("...combined vertex + texture positions list completed.", &"info_wasm_parse");
+        rust_log("Generating a list that has all unique combined vertex, texture and color data...", &"info_wasm_parse");
+        let merged_array: Vec<f32> = self.merge_vertex_texture_and_color_data(&vertex_positions, &vertex_indices, &texture_vertices, &texture_indices, &color_values);
+        rust_log(&format!("Merged vertex, texture and color data size is: {}", merged_array.len()), &"verbose_wasm_parse");
+        rust_log("...combined vertex, texture and color list completed.", &"info_wasm_parse");
 
         // create the GPU buffer
         rust_log(&"Creating GPU buffer for vertex and texture positions array...", &"verbose_wasm_gpu_mem");
@@ -64,7 +64,7 @@ impl WebGl2WavefrontObject
             3, //size
             WebGl2RenderingContext::FLOAT, //data type
             false, //normalized
-            20, //stride
+            36, //stride
             0 //offset
         );
         context.enable_vertex_attrib_array(position_attribute_location);
@@ -79,8 +79,23 @@ impl WebGl2WavefrontObject
             2, //size
             WebGl2RenderingContext::FLOAT, //data type
             false, //normalized 
-            20, //stride
+            36, //stride
             12 //offset
+        );
+        context.enable_vertex_attrib_array(texture_attribute_location);
+        rust_log(&"...binding complete.", &"verbose_wasm_gpu_data");
+
+        //Tell GPU how to extract color data from the buffer
+        rust_log(&"Binding color attribute...", &"verbose_wasm_gpu_data");
+        let color_attribute_location = context.get_attrib_location(program.as_ref().unwrap(), "a_color") as u32;
+        context.vertex_attrib_pointer_with_i32
+        (
+            color_attribute_location, //index
+            4, //size
+            WebGl2RenderingContext::FLOAT, //data type
+            false, //normalized 
+            36, //stride
+            20 //offset
         );
         context.enable_vertex_attrib_array(texture_attribute_location);
         rust_log(&"...binding complete.", &"verbose_wasm_gpu_data");
@@ -98,7 +113,7 @@ impl WebGl2WavefrontObject
             (
                 WebGl2RenderingContext::TEXTURE_2D,
                 0,
-                WebGl2RenderingContext::RGBA8 as i32,
+                WebGl2RenderingContext::SRGB8_ALPHA8 as i32,
                 self.texture_height,
                 self.texture_width,
                 //320,
@@ -121,7 +136,7 @@ impl WebGl2WavefrontObject
         rust_log(&"Starting to buffer vertex & texture position indices...", &"verbose_wasm_gpu_data");
         self.vertex_index_buffer = context.create_buffer();
         context.bind_buffer(WebGl2RenderingContext::ELEMENT_ARRAY_BUFFER, self.vertex_index_buffer.as_ref());
-        let tmp_indices: Vec<u32> = (0..(merged_array.len() / 5) as u32).collect();
+        let tmp_indices: Vec<u32> = (0..(merged_array.len() / 9) as u32).collect();
         self.indices_size = tmp_indices.len();
         unsafe 
         {
