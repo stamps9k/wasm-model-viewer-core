@@ -20,7 +20,13 @@ impl WebGl2Frame
 			{
 				rust_log(&format!("Buffering model {} to GPU...", &objset.objects[n].name), &"verbose_wasm_gpu_data.");
 				let mut tmp_obj: WebGl2WavefrontObject = WebGl2WavefrontObject::new(objset.objects[n].clone(), mtls.clone(), textures.clone())?;
-				let _ = tmp_obj.buffer(&self.context, &self.program);
+				// This used to be `let _ = tmp_obj.buffer(...)`, which silently
+				// discarded any failure (a bad texture decode, a missing GPU
+				// resource, etc.) — the object would just never render
+				// correctly with no indication why. Log it instead.
+				if let Err(e) = tmp_obj.buffer(&self.context, &self.program) {
+					rust_log(&format!("Failed to buffer model {} to GPU: {}", &objset.objects[n].name, e), &"error_wasm_parse");
+				}
 				rust_log(&format!("Setting largest and smallest values for model {}...", &objset.objects[n].name), &"verbose_wasm_parse.");
 				self.update_l_and_s_values(&tmp_obj);
 				rust_log(&"...largest and smallest values set successfully", &"verbose_wasm_parse.");

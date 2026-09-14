@@ -147,6 +147,16 @@ impl WebGl2WavefrontObject
         context.bind_buffer(WebGl2RenderingContext::ELEMENT_ARRAY_BUFFER, self.vertex_index_buffer.as_ref());
         rust_log("...index data binding complete.", &"super_super_verbose_gpu_data");
 
+        // Re-bind this object's own texture to unit 0 before drawing. This
+        // used to be skipped entirely and just relied on TEXTURE0 still
+        // happening to hold the right texture from when it was uploaded at
+        // load time — fragile, and the likely cause of textures silently
+        // not rendering (u_texture defaults to sampling unit 0 either way).
+        rust_log("TEXTURED OBJECT. Binding texture...", &"super_super_verbose_gpu_data");
+        context.active_texture(WebGl2RenderingContext::TEXTURE0);
+        context.bind_texture(WebGl2RenderingContext::TEXTURE_2D, self.texture.as_ref());
+        rust_log("...texture binding complete.", &"super_super_verbose_gpu_data");
+
         context.draw_elements_with_f64(WebGl2RenderingContext::TRIANGLES, self.indices_size as i32, WebGl2RenderingContext::UNSIGNED_INT, 0.0);
         rust_log(&format!("...{} indices drawn.", self.indices_size), &"super_super_verbose_wasm_gpu_data");
 

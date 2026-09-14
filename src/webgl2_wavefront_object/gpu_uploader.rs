@@ -121,11 +121,14 @@ impl WebGl2WavefrontObject
         
         //Buffer the texture image
         rust_log(&"Starting to buffer texture image...", &"verbose_wasm_gpu_data");
-        let texture = context.create_texture().ok_or("failed to create texture")?;
+        // Stored on self (not just a local) so draw_textured_object() has
+        // something to rebind before every frame's draw call, instead of
+        // relying on TEXTURE0 still coincidentally holding this texture.
+        self.texture = Some(context.create_texture().ok_or("failed to create texture")?);
         context.active_texture(WebGl2RenderingContext::TEXTURE0);
-        context.bind_texture(WebGl2RenderingContext::TEXTURE_2D, Some(&texture));
+        context.bind_texture(WebGl2RenderingContext::TEXTURE_2D, self.texture.as_ref());
         let image = self.create_image_as_uint8_array()?;
-        context.bind_texture(WebGl2RenderingContext::TEXTURE_2D, Some(&texture));
+        context.bind_texture(WebGl2RenderingContext::TEXTURE_2D, self.texture.as_ref());
         let _ = 
         match 
             context.tex_image_2d_with_i32_and_i32_and_i32_and_format_and_type_and_opt_js_u8_array

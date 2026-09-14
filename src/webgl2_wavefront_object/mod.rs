@@ -1,6 +1,7 @@
 use web_sys::WebGl2RenderingContext;
 use web_sys::WebGlProgram;
 use web_sys::WebGlBuffer;
+use web_sys::WebGlTexture;
 use std::collections::HashMap;
 
 
@@ -18,6 +19,12 @@ pub struct WebGl2WavefrontObject
     pub indices_size: usize,
 	pub color_buffer: Option<WebGlBuffer>,
     textures: Option<HashMap<String, String>>,
+	// The uploaded GL texture handle. Previously this was only a local
+	// variable inside textured_object_gpu_buffer() and was never kept
+	// anywhere, so draw_textured_object() had nothing of its own to
+	// (re)bind before each frame's draw call and was relying on TEXTURE0
+	// still coincidentally holding the right texture from load time.
+	texture: Option<WebGlTexture>,
 	pub texture_height: i32,
 	pub texture_width: i32,
 	pub largest: [f32; 3],
@@ -39,6 +46,7 @@ impl WebGl2WavefrontObject
 			indices_size: 0,
 			color_buffer: None,
             textures: textures,
+			texture: None,
 			texture_height: 0,
 			texture_width: 0,
 			largest: [0.0, 0.0, 0.0],
@@ -118,6 +126,7 @@ impl WebGl2WavefrontObject
 		context.delete_buffer(self.vertex_and_texture_buffer.as_ref());
 		context.delete_buffer(self.vertex_index_buffer.as_ref());
 		context.delete_buffer(self.color_buffer.as_ref());
+		context.delete_texture(self.texture.as_ref());
 	}
 }
 
