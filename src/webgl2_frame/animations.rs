@@ -2,7 +2,6 @@ use std::rc::Rc;
 use std::cell::RefCell;
 //use webgl_matrix::*;
 use wasm_bindgen::prelude::*;
-use math::mean;
 
 use crate::update_camera_position;
 use crate::utils::*;
@@ -53,7 +52,7 @@ pub fn initialize_animation(frame_wrap: &Rc<RefCell<WebGl2Frame>>)
 			{
 				frames_delta[9] = now - base;
 				base = get_current_time();
-				let fps: f64 = mean::arithmetic(&frames_delta);
+				let fps: f64 = frames_delta.iter().sum::<f64>() / frames_delta.len() as f64;
 				set_fps(fps);
 			},
 			_ => panic!("Don't know how you got here! Somehow modulo 10 operation gave value {}", i)

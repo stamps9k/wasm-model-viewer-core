@@ -1,3 +1,0 @@
-[submodule "pkg"]
-	path = pkg
-	url = git@github.com:stamps9k/wasm-model-viewer-core-bin.git
