@@ -14,7 +14,7 @@ default = ["console_error_panic_hook"]
 js-sys = "0.3.77"
 webgl-matrix = "0.1.0"
 wasm-bindgen = "0.2.100"
-wavefront_obj = "10.0.0"
+wavefront_obj = "11.0.0"
 getrandom = { version = "0.3.1", features = ["wasm_js"] }
 rand = "0.9.0"
 base64 = "0.22.1"
