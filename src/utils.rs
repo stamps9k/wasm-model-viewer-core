@@ -246,7 +246,7 @@ pub fn register_key_up()
 
         match key_event.code().as_str() {
             "ShiftLeft" => { controller.shift_key = false }
-            "CtrlLeft" => { controller.ctrl_key = false }
+            "ControlLeft" => { controller.ctrl_key = false }
             _ => { /* Default does nothing */ }
         }
 
